@@ -1,0 +1,4 @@
+<a href="{% if navigation_destination == 'accounts:verification' %}{% url 'accounts:verification' %}{% else %}{% url 'accounts:owner' %}{% endif %}"{% if request.resolver_match.view_name == 'home' or request.resolver_match.view_name == 'accounts:owner' or request.resolver_match.view_name == 'accounts:verification' %} aria-current="page"{% endif %}>Home</a>
+<span class="disabled-item" aria-disabled="true" title="Not available yet">My Listings</span>
+<span class="disabled-item" aria-disabled="true" title="Not available yet">Requests</span>
+<span class="disabled-item" aria-disabled="true" title="Not available yet">Agreements</span>

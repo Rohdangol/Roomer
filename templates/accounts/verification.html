@@ -1,0 +1,42 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}Owner Verification | Roomer{% endblock %}
+{% block styles %}
+    <link rel="stylesheet" href="{% static 'accounts/verification.css' %}">
+{% endblock %}
+{% block content %}
+    <div class="verification-panel">
+        <h1>Verify your identity</h1>
+        <p>Owners need admin approval before accessing Roomer’s homepage. Submit your citizenship or national ID for review.</p>
+        <p class="status">Status: {% if submission %}{{ submission.get_status_display }}{% else %}Not submitted{% endif %}</p>
+        {% if submission %}
+            <p>Document: {{ submission.get_document_type_display }}</p>
+            <p>Submitted: {{ submission.submitted_at }}</p>
+            <p><a href="{% url 'accounts:verification_document' submission.pk %}">Download your submitted document</a></p>
+        {% endif %}
+        {% if submission.status == 'approved' %}
+            <p>Your identity has been approved.</p>
+            <p><a href="{% url 'home' %}">Continue to homepage</a></p>
+        {% elif submission.status == 'pending' %}
+            <p>Your document is awaiting admin review. Please check back later.</p>
+        {% else %}
+            {% if submission.status == 'rejected' %}
+                <p class="error">Rejected: {{ submission.rejection_reason }}</p>
+                <p>You can submit a corrected document below.</p>
+            {% endif %}
+            <form method="post" enctype="multipart/form-data" action="{% url 'accounts:verification' %}">
+                {% csrf_token %}
+                {% if form.non_field_errors %}<div class="error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+                {% for field in form %}
+                    <div class="field">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}
+                        {% if field.errors %}<div class="error" id="{{ field.auto_id }}_error" role="alert">{{ field.errors }}</div>{% endif %}
+                    </div>
+                {% endfor %}
+                <button type="submit">Submit for review</button>
+            </form>
+        {% endif %}
+    </div>
+{% endblock %}

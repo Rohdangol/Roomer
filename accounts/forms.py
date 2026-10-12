@@ -5,7 +5,15 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.forms import UserCreationForm
 from django.core.validators import RegexValidator
 
-from .models import User
+from .models import OwnerVerification, User
+
+
+class OwnerVerificationForm(forms.ModelForm):
+    class Meta:
+        model = OwnerVerification
+        fields = ("document_type", "document")
+        labels = {"document_type": "Identity document", "document": "Document upload"}
+        help_texts = {"document": "Upload a clear JPG, PNG, or PDF, up to 5 MB."}
 
 
 class EmailLoginForm(forms.Form):

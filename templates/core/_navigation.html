@@ -1,0 +1,7 @@
+{% if user.is_staff %}
+    {% include 'core/_navigation_admin.html' %}
+{% elif user.is_authenticated and user.role == 'owner' %}
+    {% include 'core/_navigation_owner.html' %}
+{% else %}
+    {% include 'core/_navigation_tenant.html' %}
+{% endif %}

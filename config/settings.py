@@ -42,6 +42,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "core",
     "accounts.apps.AccountsConfig",
+    "listings.apps.ListingsConfig",
+    "preferences.apps.PreferencesConfig",
+    "notifications.apps.NotificationsConfig",
 ]
 
 AUTH_USER_MODEL = "accounts.User"
@@ -78,6 +81,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'core.context_processors.public_navigation',
             ],
         },
     },

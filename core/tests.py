@@ -1,6 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
+
+from accounts.models import OwnerVerification
 
 
 class HomeSessionTests(TestCase):
@@ -16,6 +19,7 @@ class HomeSessionTests(TestCase):
         user = get_user_model().objects.create_user(
             username="internal", email="person@example.com", full_name="Sample Person", role="owner",
         )
+        OwnerVerification.objects.create(user=user, document_type="citizenship", document="test.pdf", status="approved", submitted_at=timezone.now())
         self.client.force_login(user, backend="accounts.backends.EmailBackend")
         response = self.client.get(reverse("home"))
         self.assertContains(response, "Welcome, Sample Person")

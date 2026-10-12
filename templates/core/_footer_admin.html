@@ -1,0 +1,4 @@
+<section><h2 class="display-text">Roomer</h2><p>Manage and oversee the Roomer platform.</p></section>
+<section><h2>Management</h2>{% if perms.accounts.view_user or perms.accounts.change_user %}<a href="{% url 'admin:accounts_user_changelist' %}">Users</a>{% else %}<span class="disabled-item" aria-disabled="true">Users</span>{% endif %}{% if perms.listings.view_roomlisting or perms.listings.change_roomlisting %}<a href="{% url 'admin:listings_roomlisting_changelist' %}">Listing</a>{% else %}<span class="disabled-item" aria-disabled="true">Listing</span>{% endif %}</section>
+<section><h2>Rentals</h2><span class="disabled-item" aria-disabled="true">Agreements</span></section>
+<section><h2>Account</h2><span class="disabled-item" aria-disabled="true">Profile</span><span class="disabled-item" aria-disabled="true">Contact</span><span class="disabled-item" aria-disabled="true">Privacy</span></section>

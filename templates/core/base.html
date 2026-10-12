@@ -1,0 +1,27 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Roomer{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'core/theme.css' %}">
+    <link rel="stylesheet" href="{% static 'core/layout.css' %}">
+    <link rel="stylesheet" href="{% static 'core/role_chrome.css' %}">
+    {% block styles %}{% endblock %}
+    <script src="{% static 'core/layout.js' %}" defer></script>
+    {% block scripts %}{% endblock %}
+</head>
+<body class="roomer-public">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    {% comment %}Override header/footer for auth cards; styles, scripts and content are page extension points.{% endcomment %}
+    {% block header %}{% include 'core/_header.html' %}{% endblock %}
+    {% include 'core/_messages.html' %}
+    {% block page_layout %}
+    <main id="main-content" tabindex="-1">
+        {% block content %}{% endblock %}
+    </main>
+    {% endblock %}
+    {% block footer %}{% include 'core/_footer.html' %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,10 @@
+<nav id="sidebar-navigation" class="sidebar-navigation" aria-label="Admin navigation">
+    {% if user.is_staff %}
+        <a href="{% url 'home' %}"{% if request.resolver_match.view_name == 'home' %} aria-current="page"{% endif %}>Home</a>
+        <a href="{% url 'accounts:admin' %}"{% if request.resolver_match.view_name == 'accounts:admin' %} aria-current="page"{% endif %}>Admin</a>
+        <a href="{% url 'admin:index' %}">Django admin</a>
+        {% if perms.accounts.view_ownerverification or perms.accounts.change_ownerverification %}
+            <a href="{% url 'admin:accounts_ownerverification_changelist' %}">Owner verifications</a>
+        {% endif %}
+    {% endif %}
+</nav>

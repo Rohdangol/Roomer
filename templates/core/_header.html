@@ -1,0 +1,46 @@
+<header class="site-header">
+    <div class="header-content">
+        <a class="site-brand display-text" href="{% if user.is_authenticated %}{% url navigation_destination %}{% else %}{% url 'home' %}{% endif %}" aria-label="Roomer home"><span class="header-logo">Roomer logo placeholder</span></a>
+        <button class="menu-toggle" type="button" aria-controls="site-navigation" aria-expanded="false" hidden>Menu</button>
+        <nav class="site-navigation" id="site-navigation" aria-label="Main navigation">
+            {% include 'core/_navigation.html' %}
+        </nav>
+        <div class="header-controls">
+            {% if user.is_authenticated %}
+                <details class="notifications header-dropdown">
+                    <summary aria-label="Notifications" title="Notifications"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"/><path d="M10 21h4"/></svg></summary>
+                    <div class="notification-panel">
+                        <strong>Notifications</strong>
+                        {% if user.role == 'owner' and not user.is_staff %}
+                            {% if not navigation_verification %}
+                                <p>Submit your identity document to access Roomer.</p>
+                            {% elif navigation_verification.status == 'pending' %}
+                                <p>Your verification is awaiting admin review.</p>
+                            {% elif navigation_verification.status == 'rejected' %}
+                                <p>Your verification was rejected. Review the reason and submit a corrected document.</p>
+                            {% else %}
+                                <p>Your identity verification is approved.</p>
+                            {% endif %}
+                            <a href="{% url 'accounts:verification' %}">View verification status</a>
+                        {% else %}
+                            <p>No new notifications.</p>
+                        {% endif %}
+                    </div>
+                </details>
+                <details class="profile-control header-dropdown">
+                    <summary><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/></svg><span>{{ user.full_name|default:user.email }}</span></summary>
+                    <div class="profile-panel">
+                        <span class="disabled-item" aria-disabled="true" title="Not available yet">Profile</span>
+                        <form method="post" action="{% url 'accounts:logout' %}">
+                            {% csrf_token %}
+                            <button class="header-logout" type="submit">Logout</button>
+                        </form>
+                    </div>
+                </details>
+            {% else %}
+                <a href="{% url 'accounts:login' %}">Sign In</a>
+                <a href="{% url 'accounts:register' %}">Create Account</a>
+            {% endif %}
+        </div>
+    </div>
+</header>

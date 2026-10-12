@@ -1,0 +1,10 @@
+{% extends 'accounts/base_role.html' %}
+{% load static %}
+{% block styles %}<link rel="stylesheet" href="{% static 'core/home.css' %}">{% endblock %}
+{% block content %}
+    <section class="home-panel">
+        <h1>{{ page_title }}</h1>
+        <p>Welcome, {{ user.full_name|default:user.email }}</p>
+        <p>Role: {{ user.get_role_display }}</p>
+    </section>
+{% endblock %}

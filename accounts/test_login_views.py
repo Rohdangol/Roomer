@@ -35,7 +35,7 @@ class LoginViewTests(TestCase):
             "email": "  PERSON@EXAMPLE.COM  ", "password": self.password,
             "next": "https://example.com/",
         })
-        self.assertRedirects(response, reverse("home"))
+        self.assertRedirects(response, reverse("accounts:tenant"))
         self.assertEqual(self.client.session["_auth_user_id"], str(self.user.pk))
         self.assertEqual(self.client.session["_auth_user_backend"], "accounts.backends.EmailBackend")
 
@@ -50,10 +50,10 @@ class LoginViewTests(TestCase):
                 self.assertNotContains(response, password)
                 self.assertNotIn("_auth_user_id", self.client.session)
 
-    def test_authenticated_get_and_post_redirect_home(self):
+    def test_authenticated_get_and_post_redirect_tenant(self):
         self.client.force_login(self.user, backend="accounts.backends.EmailBackend")
-        self.assertRedirects(self.client.get(self.url), reverse("home"))
-        self.assertRedirects(self.client.post(self.url, {}), reverse("home"))
+        self.assertRedirects(self.client.get(self.url), reverse("accounts:tenant"))
+        self.assertRedirects(self.client.post(self.url, {}), reverse("accounts:tenant"))
 
     def test_csrf_protection(self):
         response = Client(enforce_csrf_checks=True).post(self.url, {

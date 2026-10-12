@@ -1,0 +1,6 @@
+<nav id="sidebar-navigation" class="sidebar-navigation" aria-label="Account navigation">
+    {% include 'core/_navigation.html' %}
+    {% if user.role == 'owner' and not user.is_staff and navigation_destination != 'accounts:verification' %}
+        <a href="{% url 'accounts:verification' %}"{% if request.resolver_match.view_name == 'accounts:verification' %} aria-current="page"{% endif %}>Verification</a>
+    {% endif %}
+</nav>

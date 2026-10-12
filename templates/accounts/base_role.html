@@ -1,0 +1,8 @@
+{% extends 'core/base.html' %}
+{% block title %}{{ page_title|default:'Your account' }} | Roomer{% endblock %}
+{% block page_layout %}
+        {% comment %}Role pages share top navigation; override content for each implemented page.{% endcomment %}
+        <main class="role-main role-page" id="main-content" tabindex="-1">
+            {% block content %}{% endblock %}
+        </main>
+{% endblock %}

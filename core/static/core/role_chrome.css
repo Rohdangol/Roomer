@@ -1,0 +1,54 @@
+/* Equal outer columns center role links independently of the user's name width. */
+.header-content { max-width: 1280px; display: grid; grid-template-columns: minmax(140px, 1fr) auto minmax(180px, 1fr); }
+.site-brand { justify-self: start; font-size: 12px; }
+.header-logo { display: grid; place-items: center; width: 140px; min-height: 44px; padding: 6px; border: 1px dashed var(--color-border); border-radius: 8px; color: var(--color-text-muted); text-align: center; }
+.site-navigation { justify-content: center; gap: 16px; }
+.site-navigation a, .site-navigation .disabled-item { font-size: 14px; white-space: nowrap; }
+.disabled-item { color: var(--color-text-muted); cursor: not-allowed; }
+.site-navigation .disabled-item { border-bottom: 1px dashed var(--color-border); }
+.site-navigation a[aria-current="page"] { border-radius: 999px; }
+.header-controls { justify-self: end; display: flex; align-items: center; gap: 16px; min-width: 0; }
+.header-dropdown { position: relative; }
+.header-dropdown summary { display: flex; align-items: center; gap: 8px; padding: 8px; cursor: pointer; color: var(--color-text); list-style: none; border-radius: 8px; }
+.header-dropdown summary::-webkit-details-marker { display: none; }
+.header-dropdown summary:hover { background: var(--color-primary-soft); }
+.header-dropdown summary svg { flex: 0 0 auto; }
+.profile-control summary span { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-control summary::after { content: "⌄"; }
+.notification-panel, .profile-panel { position: absolute; right: 0; top: calc(100% + 8px); width: min(300px, calc(100vw - 32px)); max-height: calc(100dvh - 120px); overflow-y: auto; padding: 16px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; z-index: 20; overflow-wrap: anywhere; }
+.notification-panel p { margin: 12px 0; }
+.profile-panel { display: flex; flex-direction: column; gap: 16px; }
+.profile-panel form { margin: 0; }
+.role-page { width: 100%; max-width: 1200px; margin: 24px auto; padding: 0 24px; min-width: 0; overflow-wrap: anywhere; }
+.role-page .home-panel { max-width: none; margin: 0; }
+.site-footer { padding: 32px 24px 20px; text-align: left; background: var(--color-surface); }
+.footer-content { max-width: 1200px; margin: auto; }
+.footer-columns { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; }
+.footer-columns section { min-width: 0; }
+.footer-columns h2 { font-size: 16px; margin: 0 0 12px; }
+.footer-columns section:first-child h2 { font-size: 24px; }
+.footer-columns p, .footer-columns a, .footer-columns .disabled-item { display: block; margin-bottom: 10px; font-size: 14px; overflow-wrap: anywhere; }
+.footer-copyright { border-top: 1px solid var(--color-border); padding-top: 18px; margin-top: 24px !important; font-size: 13px; }
+@media (min-width: 701px) and (max-width: 1100px) {
+    .header-content { grid-template-columns: 1fr 1fr; }
+    .site-navigation { grid-column: 1 / -1; grid-row: 2; }
+    .header-controls { grid-column: 2; grid-row: 1; }
+}
+@media (max-width: 700px) {
+    .header-content { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
+    .header-controls { position: relative; grid-column: 2; grid-row: 1; gap: 4px; }
+    .header-dropdown { position: static; }
+    .profile-control summary span { max-width: 90px; }
+    .header-logo { width: 110px; }
+    .menu-toggle { grid-column: 1 / -1; grid-row: 2; justify-self: end; }
+    .site-navigation { grid-column: 1 / -1; grid-row: 3; width: 100%; align-items: stretch; gap: 12px; }
+    .site-navigation a, .site-navigation .disabled-item { padding: 8px 12px; white-space: normal; }
+    .notifications { width: auto; }
+    .notification-panel { position: absolute; margin-top: 0; }
+    .footer-columns { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+    .role-page { padding: 0 16px; margin: 16px auto; }
+}
+@media (max-width: 380px) {
+    .profile-control summary span { max-width: 65px; }
+    .footer-columns { grid-template-columns: minmax(0, 1fr); }
+}

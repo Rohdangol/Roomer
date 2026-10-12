@@ -1,33 +1,18 @@
+{% extends 'core/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roomer</title>
-    <link rel="stylesheet" href="{% static 'core/theme.css' %}">
+{% block styles %}
     <link rel="stylesheet" href="{% static 'core/home.css' %}">
-</head>
-
-<body class="roomer-public">
-
-    <main class="home-panel">
-    <h1>Roomer</h1>
+{% endblock %}
+{% block content %}
+    <div class="home-panel">
+    <h1>{{ page_title|default:"Roomer" }}</h1>
     <p>Find better. Rent smarter.</p>
     {% if user.is_authenticated %}
         <p>Welcome, {{ user.full_name|default:user.email }}</p>
         <p>Role: {{ user.get_role_display }}</p>
-        <form method="post" action="{% url 'accounts:logout' %}">
-            {% csrf_token %}
-            <button type="submit">Logout</button>
-        </form>
-    {% else %}
-        <nav aria-label="Account">
-            <a href="{% url 'accounts:login' %}">Sign In</a>
-            <a href="{% url 'accounts:register' %}">Create Account</a>
-        </nav>
+        {% if account_destination %}
+            <p><a href="{% url account_destination %}">Continue to your account area</a></p>
+        {% endif %}
     {% endif %}
-    </main>
-
-</body>
-</html>
+    </div>
+{% endblock %}

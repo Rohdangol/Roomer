@@ -1,0 +1,48 @@
+.site-header { background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+.header-content { max-width: 1100px; margin: auto; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.site-brand { font-size: 28px; font-weight: 700; text-decoration: none; }
+.site-navigation { display: flex; align-items: center; flex-wrap: wrap; gap: 20px; }
+.site-navigation a { text-decoration: none; }
+.site-navigation a:hover { text-decoration: underline; }
+.site-navigation form { margin: 0; }
+.site-header button { width: auto; padding: 8px 14px; border: 1px solid var(--color-primary); border-radius: 6px; background: var(--color-surface); color: var(--color-primary); cursor: pointer; }
+.site-header button:hover { background: var(--color-primary-soft); }
+.menu-toggle { display: none; }
+.notifications { position: relative; }
+.notifications summary { cursor: pointer; color: var(--color-primary); }
+.notification-panel { position: absolute; right: 0; top: calc(100% + 12px); z-index: 20; width: min(320px, calc(100vw - 32px)); padding: 16px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; overflow-wrap: anywhere; }
+.notification-panel p { margin-top: 0; color: var(--color-text-muted); }
+.site-messages { max-width: 1000px; margin: 24px auto 0; padding: 0 16px; }
+.site-message { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; margin-bottom: 12px; border: 1px solid var(--color-border); border-left: 4px solid currentColor; border-radius: 6px; color: var(--color-text); background: var(--color-surface); }
+.site-message p { flex: 1; margin: 0; overflow-wrap: anywhere; }
+.site-message.success { color: var(--color-success); }
+.site-message.error, .site-message.warning { color: var(--color-error); }
+.site-message .message-dismiss { flex: 0 0 auto; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: inherit; cursor: pointer; font-size: 24px; }
+.site-message .message-dismiss:hover { background: var(--color-background); }
+.skip-link { position: absolute; left: 16px; top: -100px; padding: 12px; background: var(--color-surface); z-index: 30; }
+.skip-link:focus { top: 12px; }
+.roomer-public [hidden] { display: none !important; }
+.roomer-public { min-height: 100vh; display: flex; flex-direction: column; }
+.roomer-public > main, .roomer-public > .role-layout { flex: 1; min-width: 0; }
+.site-footer { margin-top: auto; padding: 20px 16px; text-align: center; color: var(--color-text-muted); border-top: 1px solid var(--color-border); }
+.site-footer p { margin: 0; }
+.site-navigation a[aria-current="page"], .sidebar-navigation a[aria-current="page"] { background: var(--color-primary-soft); color: var(--color-primary-hover); font-weight: 700; border-radius: 6px; padding: 8px 12px; }
+.role-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); max-width: 1200px; width: 100%; margin: 24px auto; gap: 24px; padding: 0 24px; }
+.role-sidebar { min-width: 0; padding: 20px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; align-self: start; }
+.sidebar-navigation { display: flex; flex-direction: column; gap: 12px; }
+.sidebar-navigation a { padding: 8px 12px; text-decoration: none; overflow-wrap: anywhere; }
+.sidebar-toggle { display: none; width: 100%; padding: 10px; border: 1px solid var(--color-primary); border-radius: 6px; background: var(--color-surface); color: var(--color-primary); cursor: pointer; }
+.role-main { min-width: 0; overflow-wrap: anywhere; }
+.role-main .home-panel { max-width: none; margin: 0; }
+.header-content, .site-navigation, .site-message p { min-width: 0; }
+.site-navigation a, .site-brand { overflow-wrap: anywhere; }
+@media (max-width: 700px) {
+    .role-layout { grid-template-columns: minmax(0, 1fr); padding: 0 16px; gap: 16px; margin: 16px auto; }
+    .sidebar-toggle { display: block; }
+    .sidebar-navigation { margin-top: 12px; }
+    .header-content { flex-wrap: wrap; padding: 12px 16px; }
+    .menu-toggle { display: block; }
+    .site-navigation { width: 100%; align-items: flex-start; flex-direction: column; gap: 16px; }
+    .notifications { width: 100%; }
+    .notification-panel { position: static; width: 100%; margin-top: 12px; }
+}

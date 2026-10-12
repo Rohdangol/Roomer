@@ -1,0 +1,10 @@
+{% if messages %}
+    <section class="site-messages" aria-label="Notifications and messages">
+        {% for message in messages %}
+            <div class="site-message {{ message.tags }}" role="{% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}alert{% else %}status{% endif %}">
+                <p><strong>{{ message.level_tag|title }}:</strong> {{ message }}</p>
+                <button type="button" class="message-dismiss" aria-label="Dismiss message" hidden>×</button>
+            </div>
+        {% endfor %}
+    </section>
+{% endif %}

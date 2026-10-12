@@ -1,17 +1,15 @@
+{% extends 'accounts/base_auth.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In | Roomer</title>
-    <link rel="stylesheet" href="{% static 'core/theme.css' %}">
+{% block title %}Sign In | Roomer{% endblock %}
+{% block styles %}
     <link rel="stylesheet" href="{% static 'accounts/register.css' %}">
     <link rel="stylesheet" href="{% static 'accounts/login.css' %}">
+{% endblock %}
+{% block scripts %}
     <script src="{% static 'accounts/password-controls.js' %}" defer></script>
-</head>
-<body class="roomer-public">
-    <main class="registration-card login-card">
+{% endblock %}
+{% block content %}
+    <div class="registration-card login-card">
         <section class="welcome" aria-labelledby="welcome-title">
             <div class="welcome-intro">
                 <div class="logo-area">
@@ -32,9 +30,6 @@
         <section class="registration" aria-labelledby="login-title">
             <h1 id="login-title">Welcome Back!</h1>
             <p class="subtitle">Sign in to continue to Roomer.</p>
-            {% for message in messages %}
-                <p class="success" role="status">{{ message }}</p>
-            {% endfor %}
             <form method="post" action="{% url 'accounts:login' %}">
                 {% csrf_token %}
                 {% if form.non_field_errors %}
@@ -59,6 +54,5 @@
             </form>
             <p class="signin-note">Don’t have an account? <a href="{% url 'accounts:register' %}">Sign up</a></p>
         </section>
-    </main>
-</body>
-</html>
+    </div>
+{% endblock %}
