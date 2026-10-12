@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create an Account | Roomer</title>
+    <link rel="stylesheet" href="{% static 'core/theme.css' %}">
+    <link rel="stylesheet" href="{% static 'accounts/register.css' %}">
+    <script src="{% static 'accounts/password-controls.js' %}" defer></script>
+</head>
+<body class="roomer-public">
+    <main class="registration-card">
+        <section class="welcome" aria-labelledby="welcome-title">
+            <div class="welcome-intro">
+                <div class="logo-area">
+                    {% comment %}
+                    Once accounts/static/accounts/images/roomer-logo.svg exists, replace the placeholder span with:
+                    <img src="{% static 'accounts/images/roomer-logo.svg' %}" alt="Roomer">
+                    The logo-area image styles use object-fit: contain to avoid cropping.
+                    {% endcomment %}
+                    <span class="logo-placeholder">Roomer logo placeholder</span>
+                </div>
+                <h2 id="welcome-title">Your journey starts here.</h2>
+                <p>Find your next home.</p>
+            </div>
+            <div class="illustration" aria-hidden="true">
+                <img src="{% static 'accounts/images/signup-room.jpg' %}" alt="">
+            </div>
+        </section>
+        <section class="registration" aria-labelledby="registration-title">
+            <h1 id="registration-title">Create an Account</h1>
+            <p class="subtitle">Join Roomer and get started today.</p>
+            {% for message in messages %}
+                <p class="success" role="status">{{ message }}</p>
+            {% endfor %}
+            <form method="post" action="{% url 'accounts:register' %}">
+                {% csrf_token %}
+                {% if form.errors %}
+                    <p class="error-summary" role="alert">Please correct the errors below.</p>
+                {% endif %}
+                {% if form.non_field_errors %}
+                    <div class="errors" role="alert">{{ form.non_field_errors }}</div>
+                {% endif %}
+                {% for field in form %}
+                    {% if field.name == 'role' %}
+                        <fieldset class="field role-field">
+                            <legend>{{ field.label }}</legend>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="errors" id="{{ field.auto_id }}_error">{{ field.errors }}</div>
+                            {% endif %}
+                        </fieldset>
+                    {% else %}
+                        <div class="field">
+                            {% if field.name == 'password1' %}
+                                <div class="password-label">
+                                    {{ field.label_tag }}
+                                    <div class="password-help">
+                                        <button type="button" class="password-help-toggle" hidden
+                                                aria-label="Password requirements" aria-controls="{{ field.auto_id }}_helptext"
+                                                aria-expanded="false">ⓘ</button>
+                                        <div class="help password-help-content" id="{{ field.auto_id }}_helptext">
+                                            {{ field.help_text|safe }}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                {{ field.label_tag }}
+                            {% endif %}
+                            {% if field.name == 'password1' or field.name == 'password2' %}
+                                {% include 'accounts/_password_input.html' with field=field %}
+                            {% else %}
+                                {{ field }}
+                            {% endif %}
+                            {% if field.help_text and field.name != 'password1' %}
+                                <div class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text|safe }}</div>
+                            {% endif %}
+                            {% if field.errors %}
+                                <div class="errors" id="{{ field.auto_id }}_error">{{ field.errors }}</div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+                <button type="submit">Create Account</button>
+            </form>
+            <p class="signin-note">Already have an account? <a href="{% url 'accounts:login' %}">Sign in</a></p>
+        </section>
+    </main>
+</body>
+</html>

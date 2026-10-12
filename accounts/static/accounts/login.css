@@ -1,0 +1,17 @@
+/* Reuse registration's card and form styles; keep login-specific sizing here. */
+.login-card { min-height: 640px; }
+
+.login-card .registration {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    text-align: left;
+}
+
+/* Keep natural content height so messages and small windows can scroll safely. */
+.login-card .registration > * { flex-shrink: 0; }
+
+@media (max-width: 700px) {
+    .login-card { min-height: 0; }
+}

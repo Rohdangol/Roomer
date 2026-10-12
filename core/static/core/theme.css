@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Outfit:wght@100..900&display=swap');
+
+/* Public pages opt in with this class; Django admin keeps its own styles. */
+.roomer-public {
+    --color-primary: #0F766E;
+    --color-primary-hover: #115E59;
+    --color-primary-soft: #F0FDFA;
+    --color-background: #F8FAFC;
+    --color-surface: #FFFFFF;
+    --color-text: #0F172A;
+    --color-text-muted: #475569;
+    --color-border: #CBD5E1;
+    --color-error: #B91C1C;
+    --color-success: #15803D;
+    --font-heading: "Outfit", sans-serif;
+    --font-body: "Manrope", sans-serif;
+
+    margin: 0;
+    background: var(--color-background);
+    color: var(--color-text);
+    font-family: var(--font-body);
+    line-height: 1.5;
+}
+
+.roomer-public *, .roomer-public *::before, .roomer-public *::after {
+    box-sizing: border-box;
+}
+
+.roomer-public h1, .roomer-public h2, .roomer-public h3,
+.roomer-public h4, .roomer-public h5, .roomer-public h6,
+.roomer-public .display-text {
+    font-family: var(--font-heading);
+    color: var(--color-text);
+}
+
+.roomer-public input, .roomer-public button,
+.roomer-public select, .roomer-public textarea {
+    font: inherit;
+}
+
+.roomer-public a { color: var(--color-primary); }
+.roomer-public a:hover { color: var(--color-primary-hover); }
+
+.roomer-public :focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 3px;
+}

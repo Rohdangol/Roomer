@@ -47,6 +47,7 @@ db.sqlite3-journal
 # User Uploaded Media
 # --------------------
 media/
+private_identity/
 
 
 # --------------------

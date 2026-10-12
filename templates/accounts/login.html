@@ -1,0 +1,64 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In | Roomer</title>
+    <link rel="stylesheet" href="{% static 'core/theme.css' %}">
+    <link rel="stylesheet" href="{% static 'accounts/register.css' %}">
+    <link rel="stylesheet" href="{% static 'accounts/login.css' %}">
+    <script src="{% static 'accounts/password-controls.js' %}" defer></script>
+</head>
+<body class="roomer-public">
+    <main class="registration-card login-card">
+        <section class="welcome" aria-labelledby="welcome-title">
+            <div class="welcome-intro">
+                <div class="logo-area">
+                    {% comment %}
+                    Once accounts/static/accounts/images/roomer-logo.svg exists, replace the placeholder with:
+                    <img src="{% static 'accounts/images/roomer-logo.svg' %}" alt="Roomer">
+                    The shared logo-area styles use object-fit: contain.
+                    {% endcomment %}
+                    <span class="logo-placeholder">Roomer logo placeholder</span>
+                </div>
+                <h2 id="welcome-title">Welcome to Roomer.</h2>
+                <p>Find a place that feels like home.</p>
+            </div>
+            <div class="illustration" aria-hidden="true">
+                <img src="{% static 'accounts/images/signup-room.jpg' %}" alt="">
+            </div>
+        </section>
+        <section class="registration" aria-labelledby="login-title">
+            <h1 id="login-title">Welcome Back!</h1>
+            <p class="subtitle">Sign in to continue to Roomer.</p>
+            {% for message in messages %}
+                <p class="success" role="status">{{ message }}</p>
+            {% endfor %}
+            <form method="post" action="{% url 'accounts:login' %}">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="errors" role="alert">{{ form.non_field_errors }}</div>
+                {% elif form.errors %}
+                    <p class="error-summary" role="alert">Please correct the errors below.</p>
+                {% endif %}
+                {% for field in form %}
+                    <div class="field">
+                        {{ field.label_tag }}
+                        {% if field.name == 'password' %}
+                            {% include 'accounts/_password_input.html' with field=field %}
+                        {% else %}
+                            {{ field }}
+                        {% endif %}
+                        {% if field.errors %}
+                            <div class="errors" id="{{ field.auto_id }}_error">{{ field.errors }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                <button type="submit">Sign In</button>
+            </form>
+            <p class="signin-note">Don’t have an account? <a href="{% url 'accounts:register' %}">Sign up</a></p>
+        </section>
+    </main>
+</body>
+</html>
