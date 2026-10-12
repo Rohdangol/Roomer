@@ -5,6 +5,8 @@
 .site-navigation { justify-content: center; gap: 16px; }
 .site-navigation a, .site-navigation .disabled-item { font-size: 14px; white-space: nowrap; }
 .disabled-item { color: var(--color-text-muted); cursor: not-allowed; }
+.disabled-item::after { content: " (soon)"; font-size: 10px; }
+.site-navigation .disabled-item::after { display: none; }
 .site-navigation .disabled-item { border-bottom: 1px dashed var(--color-border); }
 .site-navigation a[aria-current="page"] { border-radius: 999px; }
 .header-controls { justify-self: end; display: flex; align-items: center; gap: 16px; min-width: 0; }
