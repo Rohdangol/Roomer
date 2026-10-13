@@ -119,7 +119,7 @@ Implementation usage for the two developers:
 - Submission and review must use `submit_listing_revision` and `review_listing_revision`; the revision ID identifies the frozen submitted version. These narrow locked services intentionally use QuerySet.update for transitions because normal save() rejects submitted-record edits.
 - Availability changes go through `change_listing_availability`; never set occupied manually in public/admin views. Agreements must later integrate a real active-agreement check with the existing lock, replacing the phase-one conservative occupied guard.
 - Browse through `published_listings()` and render only `published_revision` and its amenity/photo associations. Apply the same eligibility to future new applications and photo downloads.
-- Preference service requires all four mandatory factors and location coordinates in its complete details dictionary; omitted/empty amenities mean no preference. `create_notification` is an internal workflow helper, not a public creation endpoint.
+- Preference service requires all four mandatory factors; coordinates are optional as a pair (omitted values default to null); omitted/empty amenities mean no preference. `create_notification` is an internal workflow helper, not a public creation endpoint.
 - Basic admin registrations are view-only; they inspect records without introducing add/edit/delete paths that bypass services. Existing account/verification admin behavior is unchanged.
 
 ## Decision status
@@ -127,3 +127,162 @@ Implementation usage for the two developers:
 All five phase-one questions are resolved: automatic first publication, suspension-based visibility, photo limits/actual-content validation and optional amenities, archive-origin protection/restore to inactive, and immutable submission/review history. Technical structures remain labelled as proposals in DATA_MODEL.md, not implemented code.
 
 Nonblocking deferred decisions: rent-estimation method; matching formulas including optional-amenity scoring; detailed request/roommate/agreement/occupancy lifecycle above. Resolve before implementing those calculations/modules; do not guess in phase one.
+
+
+## Find Rooms nearby search (agreed)
+
+Tenant map selection supplies latitude/longitude through GET parameters. Nearby
+search defaults to 2 km; supported radius choices are 1, 2 and 5 km. Use Haversine
+spherical distance (mean Earth radius 6371 km), including rooms at the boundary.
+Combine with text location, budget, room type, furnishing and all selected
+amenities before counting/pagination. Read coordinates only from the eligible
+published revision. Exclude missing coordinates only when a point is selected;
+normal search remains unchanged without a point. Validate paired finite
+coordinates within latitude -90..90 / longitude -180..180 and the allowed radius
+server-side. Preserve selection/radius in GET and pagination; Reset clears both.
+Geolocation runs only on explicit user action. No external geocoding is used.
+Leaflet loads from a pinned CDN; OpenStreetMap supplies attributed map tiles.
+
+
+## Saved Rooms (subsequently authorized)
+
+Active tenants save/remove only their own bookmarks through CSRF-protected POST.
+Use `saved_rooms.services.save_room` (idempotent, unique tenant/listing, eligible
+published listing required) and `remove_saved_room` (own tenant scope, permitted
+for unavailable listings). Browse saved records newest-saved first, six per
+page; count includes unavailable bookmarks. Resolve visible content only through
+`published_listings`/shared search services; unavailable entries expose no title,
+photos, owner or draft fields. Preserve local listing-page query parameters on
+return; reject external/arbitrary redirects. No public save state or demo data.
+
+
+## Tenant rental requests: confirmed rules and pending backend
+
+This later decision authorizes Tenant page layouts, not creation of the rentals
+app/migration. Shru (Admin/shared developer B) owns the rentals migration chain.
+Earlier unresolved move-in/message, occupancy and cancellation questions above
+are resolved as follows; owner decision/agreement rules remain deferred.
+
+- Preferred move-in date is required. Compare against today's date in
+  Asia/Kathmandu (Nepal time), and against the captured published revision's
+  available_from when present. It must be on/after both dates.
+- Message is optional. Occupancy is an explicit total including the tenant:
+  minimum 1, maximum the published revision's maximum_occupants. No roommate
+  identities or roommate records are collected in this step.
+- Submission rechecks active tenant and eligible listing through
+  published_listings(), locks the stable listing, and captures its current
+  approved revision. Pending or accepted requests for the same tenant/listing
+  prevent another submission, including concurrent submissions.
+- Tenant cancellation is pending -> cancelled only. Lock and scope by the
+  authenticated tenant. Preserve the original record. Cancelled/rejected
+  requests permit a new application, rechecking all submission conditions;
+  accepted requests do not. No reopening, deletion, expiry or auto-reservation.
+- Request-submitted notifications target the listing owner via the existing
+  create_notification helper in the submission transaction. Cancellation
+  notifications are not specified; do not invent them. Owner decisions and
+  agreements are not implemented in this Tenant step.
+- Until those models/services exist, My Requests has disabled status filters,
+  an explicit unavailable state, and no fabricated counts/records/pagination.
+  Request Details has a reusable layout only, with no record URL exposed.
+  Send Request remains disabled and there is no fake submission success.
+
+### Required handoff to Shru (no migration created)
+
+Create RentalRequest in rentals, using AUTH_USER_MODEL:
+
+| Field | Required schema |
+|---|---|
+| tenant | User FK, required, PROTECT |
+| listing | stable RoomListing FK, required, PROTECT |
+| listing_revision | captured approved ListingRevision FK, required, PROTECT |
+| preferred_move_in | DateField, required |
+| occupancy | PositiveSmallIntegerField, required, total including tenant |
+| message | TextField, blank=True |
+| status | pending / accepted / rejected / cancelled, default pending |
+| requested_at | server-written DateTimeField |
+| responded_at | nullable server-written owner decision timestamp |
+| cancelled_at | nullable server-written tenant cancellation timestamp |
+| rejection_reason | optional TextField; owner rejection requiredness remains deferred |
+
+Add a conditional unique constraint on (tenant, listing) where status is pending
+or accepted; status and occupancy >=1 checks; indexes (tenant,status,requested_at)
+and (listing,status,requested_at). Capacity/date/revision ownership checks are
+cross-record transactional service checks, not duplicated static schema values.
+Provide submit_rental_request(actor, listing_id, preferred_move_in, occupancy,
+message="") and cancel_rental_request(actor, request_id) enforcing the rules
+above. Tenant list/detail reads must scope ownership before resolving data.
+Resolve listing/photo/owner display through the existing eligibility contract;
+if unavailable, show a neutral summary rather than unpublished fields. Return
+request information/status from the owned retained record. Display no private
+owner contact or identity documents; an approved identity status alone may
+justify an identity badge. Agreement creation remains outside this handoff.
+
+
+## Tenant agreement layout handoff (backend deferred)
+
+My Agreements is a tenant-only unavailable page with All/Pending/Active/Completed
+structure from the wireframe. No agreement models/services exist. No fabricated
+count, pagination, record, confirmation timestamp or download is shown. The
+agreement_details template provides extension points for an owned agreement's
+metadata, authorized listing summary, immutable agreed rent/deposit/due date/
+occupancy/duration, permitted party identity, rules, terms and confirmations.
+Confirmation/download remain disabled. There is no record-specific details URL
+until Shru supplies the rentals backend and ownership-scoped read contract.
+Resolve snapshots and historical access deliberately; do not substitute current
+listing terms for agreement terms or expose private documents/contact details.
+Existing agreement lifecycle questions above remain unresolved. No rentals
+models, services or migrations were created in this layout task.
+
+
+## Home first-search preference onboarding
+
+Home search and popular-area shortcuts are routed through the tenant-only Home
+view. Completion requires a saved preference passing model validation, not just
+an existing row. Incomplete searches render a CSRF-protected server-side modal;
+errors retain the submitted form. Onboarding accepts a text-only location and contains no coordinate controls or
+map. Profile keeps optional map/manual coordinates. No geolocation or geocoding
+is used.
+Location, room type and positive budget are required; furnishing may be Any and
+amenities may be empty. Save through save_tenant_preference for the session user.
+On success, Find Rooms receives text location, budget, room type, furnishing
+(empty search choice for Any), and amenity IDs. Completed Home searches apply
+saved factors with the entered location; old coordinates are not applied to a
+new text location. Search changes never update the saved profile. Closing saves
+nothing. Direct navbar navigation to Find Rooms remains independent. Preferences
+migration ownership is Rohan (Tenant developer A); preference-only Any does not
+change listing furnishing choices.
+
+
+Text-only preference clarification: latitude/longitude may both be null, or both
+be provided within their existing bounds. Reject one-sided pairs at model/form/
+service and database layers. Completion uses full model validation with this
+optional-coordinate contract. The service clears stale coordinates when the
+area changes with the old point unchanged and no new selection; Profile records
+explicit map/manual selection. Onboarding always saves text-only coordinates.
+Listing coordinates and Find Rooms nearby radius/Haversine rules are unchanged.
+preferences.0003 is applied in the current local database; new checkouts must run migrate. No existing data is rewritten.
+
+
+## Tenant Profile verification handoff
+
+Registration-only email proof and tenant ID history/review backend are absent.
+Profile currently shows honest Unverified / Not Submitted states and 0/2
+completed steps, with ID submission controls disabled and tenant access unchanged.
+Shru owns the required accounts schema, services, preservation migrations and
+admin integration detailed in [TENANT_VERIFICATION_HANDOFF.md](TENANT_VERIFICATION_HANDOFF.md).
+No Profile email-verification workflow or tenant upload endpoint is implemented.
+
+
+## Verification backend implementation (supersedes unavailable-layout notes)
+
+Registration now sends a signed, expiring 24-hour email verification link.
+Successful CSRF-protected confirmation persists proof for that email only.
+Resend: one-minute cooldown/five per hour; no repeated verification for proven
+addresses. Existing users remain unverified. Tenant Profile now submits decoded
+JPEG/PNG front/back government IDs privately; pending -> admin approved/rejected;
+rejected -> new immutable attempt. Approved/pending replacement is blocked.
+Django admin review is enabled; tenant access remains independent of ID approval.
+Accounts.0005 is applied in the current local database; Shru owns coordination. New checkouts must run migrate. See
+[TENANT_VERIFICATION_HANDOFF.md](TENANT_VERIFICATION_HANDOFF.md) for implemented
+schema/service signatures, console/SMTP setup and manual review steps. Old
+owner-only overwritten history cannot be reconstructed and remains unchanged.

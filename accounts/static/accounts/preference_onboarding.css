@@ -1,0 +1,23 @@
+.preference-onboarding { position:fixed; inset:0; width:min(760px,calc(100% - 32px)); max-height:calc(100dvh - 32px); overflow:hidden; border:1px solid var(--color-border); border-radius:24px; padding:0; margin:auto; background:var(--color-surface); color:var(--color-text); z-index:40; }
+.preference-onboarding::backdrop { background:rgb(0 0 0 / 55%); }
+.onboarding-heading { padding:24px 28px; flex-shrink:0; background:var(--color-surface); display:flex; align-items:center; justify-content:space-between; gap:20px; }
+.onboarding-heading h2 { margin:0; }
+.onboarding-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:24px 0; }
+.onboarding-field { min-width:0; }
+.onboarding-field > label { display:block; margin-bottom:8px; font-weight:600; }
+.onboarding-field input:not([type=checkbox]), .onboarding-field select { width:100%; padding:10px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface); }
+.onboarding-field small { display:block; color:var(--color-text-muted); }
+.onboarding-field #id_amenities { display:grid; gap:8px; }
+.preference-onboarding .errorlist { color:var(--color-error); }
+.preference-onboarding #preference-location-map { height:220px; isolation:isolate; background:var(--color-primary-soft); border-radius:12px; }
+.preference-onboarding button { padding:12px 20px; border:0; border-radius:999px; background:var(--color-primary); color:var(--color-surface); font:inherit; cursor:pointer; }
+@media(max-width:540px) { .onboarding-fields { grid-template-columns:minmax(0,1fr); } .onboarding-heading, .onboarding-body, .onboarding-actions { padding:20px; } }
+
+/* Only form content scrolls; close and submit remain reachable on short screens. */
+.preference-onboarding[open] { display:flex; flex-direction:column; }
+.preference-onboarding > form { display:flex; flex-direction:column; min-height:0; }
+.onboarding-body { overflow-y:auto; min-height:0; padding:0 28px 24px; }
+.onboarding-actions { flex-shrink:0; padding:16px 28px; border-top:1px solid var(--color-border); background:var(--color-surface); }
+.onboarding-actions button { width:100%; }
+.onboarding-amenities { grid-column:1/-1; }
+@media(max-width:540px) { .onboarding-body { padding:0 20px 20px; } .onboarding-heading { padding:20px; } .onboarding-actions { padding:16px 20px; } }

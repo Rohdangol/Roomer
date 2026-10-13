@@ -1,0 +1,51 @@
+/* Find Rooms uses the Tenant Home shell; these rules only change its result layout. */
+.find-layout { width: calc(100% - 48px); max-width: 1200px; margin: 40px auto 0; display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: 30px; align-items: start; }
+.room-filters { padding: 28px; border-radius: 30px; background: var(--color-primary-soft); }
+.filter-heading, .results-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.filter-heading h2, .results-heading h2 { margin: 0; font-size: 30px; }
+.filter-heading a { font-size: 14px; }
+.filter-location, .filter-field { border-top: 1px solid var(--color-border); padding-top: 22px; margin-top: 22px; }
+.filter-location h3 { margin: 0 0 12px; font-size: 22px; }
+.filter-location p, .results-heading p, .selected-area { color: var(--color-text-muted); font-size: 14px; }
+.map-unavailable { min-height: 230px; display: grid; place-items: center; padding: 24px; text-align: center; background: var(--color-background); color: var(--color-text-muted); border: 1px dashed var(--color-border); border-radius: 14px; }
+.filter-location button { width: 100%; margin-top: 14px; font-size: 12px; }
+.filter-field > label { display: block; font-family: var(--font-heading, 'Outfit', sans-serif); font-weight: 600; font-size: 22px; margin-bottom: 14px; }
+.filter-field select, .filter-field input[type=number] { width: 100%; min-width: 0; padding: 12px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); }
+.filter-field #id_amenities { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.filter-field #id_amenities label { font-size: 13px; display: flex; align-items: center; gap: 8px; overflow-wrap: anywhere; }
+.filter-field input[type=checkbox] { accent-color: var(--color-primary); flex-shrink: 0; }
+.apply-filters { width: 100%; margin-top: 24px; border-radius: 999px !important; }
+.filter-errors { color: var(--color-error); font-size: 14px; overflow-wrap: anywhere; }
+.results-heading { margin-bottom: 30px; align-items: flex-start; }
+.results-heading p { margin: 8px 0 0; }
+.results-heading > p { flex-shrink: 0; }
+.results-list { display: grid; gap: 36px; }
+.results-list .room-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); padding: 20px; gap: 28px; min-height: 280px; }
+.results-list .room-photo { margin: 0; aspect-ratio: auto; min-height: 240px; }
+.results-list .room-card-content { padding: 0; }
+.results-list .room-card h3 { margin-top: 22px; }
+.results-list .empty-state { min-height: 400px; display: grid; align-content: center; text-align: center; }
+.room-pagination { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 36px; }
+.room-pagination a, .room-pagination span { min-width: 42px; min-height: 42px; display: grid; place-items: center; border-radius: 999px; border: 1px solid var(--color-border); text-decoration: none; }
+.room-pagination [aria-current] { background: var(--color-primary); color: var(--color-surface); }
+@media (max-width: 1100px) { .find-layout { grid-template-columns: 290px minmax(0, 1fr); gap: 24px; } .room-filters { padding: 22px; } .results-list .room-card { gap: 18px; } .results-heading { flex-wrap: wrap; } }
+@media (max-width: 800px) { .find-layout { grid-template-columns: minmax(0, 1fr); } .room-filters { width: 100%; } .map-unavailable { min-height: 140px; } }
+@media (max-width: 540px) { .results-list .room-card { grid-template-columns: minmax(0, 1fr); } .results-list .room-photo { aspect-ratio: 4 / 3; min-height: 0; } .find-layout { width: calc(100% - 32px); } .room-filters { padding: 20px; } .results-heading h2 { font-size: 27px; } }
+
+/* Native radio inputs keep the wireframe's choice controls keyboard accessible. */
+fieldset.filter-field { min-width: 0; border: 0; border-top: 1px solid var(--color-border); padding: 22px 0 0; }
+.filter-field legend { float: left; width: 100%; font-family: var(--font-heading); font-weight: 600; font-size: 22px; margin-bottom: 14px; padding: 0; }
+.filter-field legend + * { clear: both; }
+#id_room_type, #id_furnishing { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+#id_room_type label, #id_furnishing label { display: flex; align-items: center; gap: 6px; border: 1px solid var(--color-border); border-radius: 999px; padding: 8px; font-size: 12px; cursor: pointer; }
+#id_room_type input, #id_furnishing input { accent-color: var(--color-primary); margin: 0; }
+#id_room_type label:has(:checked), #id_furnishing label:has(:checked) { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-surface); }
+#id_room_type label:focus-within, #id_furnishing label:focus-within { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+
+/* Keep Leaflet panes below the shared profile/menu controls. */
+#room-location-map { height: 260px; width: 100%; border-radius: 14px; border: 1px solid var(--color-border); isolation: isolate; background: var(--color-background); }
+#map-status, #selected-point { overflow-wrap: anywhere; }
+.filter-location > label { display: block; margin: 18px 0 8px; font-weight: 600; }
+#id_radius { width: 100%; padding: 10px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); font: inherit; }
+#room-location-map .leaflet-control-attribution { font-size: 10px; }
+@media (max-width: 540px) { #room-location-map { height: 240px; } }

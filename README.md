@@ -5,6 +5,10 @@ email login, logout, owner document verification and protected role entry pages
 exist. Shared listing/revision, preference and notification models/services exist;
 their module pages and custom Admin UI are still to be built.
 
+Tenant Home at `/accounts/tenant/` now displays eligible published rooms with
+location filtering and protected listing photos. Personalized recommendations
+remain deferred; the page labels its newest-first fallback explicitly.
+
 ## Windows local setup
 
 Use Python 3.13 (the tested version) and a running PostgreSQL server. Run these
@@ -37,7 +41,7 @@ you created; local host/port are normally `localhost` and `5432`. Replace the
 secret-key placeholder with a securely generated Django secret key.
 
 Optional: `EMAIL_BACKEND` and `DEFAULT_FROM_EMAIL`; defaults/example use console
-email delivery and a local sender. No SMTP or email/OTP verification is set up.
+email delivery and a local sender. Registration now sends signed email verification links; console delivery prints them locally. Real inbox delivery requires SMTP setup (see docs/TENANT_VERIFICATION_HANDOFF.md).
 
 ```powershell
 .\venv\Scripts\python.exe manage.py migrate
@@ -52,8 +56,9 @@ Open http://127.0.0.1:8000/ and http://127.0.0.1:8000/admin/.
 Owners submit citizenship/national-ID documents for manual Django-admin review
 before entering their account area; tenants can continue without verification.
 Identity files stay under ignored `private_identity/` with authorized downloads.
-Listing photos stay under ignored `media/listing_photos/`; published-photo delivery
-pages are not built yet. New shared-model admin registrations are inspection-only.
+Listing photos stay under ignored `media/listing_photos/`; Tenant Home serves only
+currently eligible published photos through a tenant-protected endpoint.
+New shared-model admin registrations are inspection-only.
 Verification attempt-history extension remains a documented follow-up.
 
 ## Collaboration
@@ -61,6 +66,7 @@ Verification attempt-history extension remains a documented follow-up.
 - Project owner: Tenant pages. Other developer: custom Admin pages.
 - Coordinate shared models/migrations, settings, root/app URLs and the shared
   Outfit/Manrope teal theme before editing overlapping files.
+- `saved_rooms` migrations belong to the Tenant developer.
 - One migration owner per app: Admin/shared developer owns `accounts` and
   `listings`; Tenant developer owns `preferences` and `notifications`. Reconcile
   dependencies before generating migrations; never rewrite applied migrations.
@@ -82,3 +88,5 @@ Tests use an isolated PostgreSQL test database. `.env`, virtual environments,
 local databases, uploads and generated static files are excluded from Git;
 `.env.example` contains setup placeholders only. Review exclusions before a PR.
 Google Fonts is used by the agreed theme; a browser needs internet for those fonts.
+
+Verification backend/schema handoff: [tenant verification](docs/TENANT_VERIFICATION_HANDOFF.md). Apply accounts.0005 before using the new email/tenant identity features.

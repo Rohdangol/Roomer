@@ -1,0 +1,5 @@
+{# Explicit idempotent POST actions preserve the current local search/page. #}
+<form class="save-room-form" method="post" action="{% url 'accounts:change_saved_room' listing.pk %}">
+{% csrf_token %}<input type="hidden" name="return_to" value="{{ request.get_full_path }}"><input type="hidden" name="action" value="{% if listing.is_saved %}remove{% else %}save{% endif %}">
+<button class="save-room-button{% if listing.is_saved %} is-saved{% endif %}" type="submit" aria-label="{% if listing.is_saved %}Remove room from Saved Rooms{% else %}Save room{% endif %}" aria-pressed="{% if listing.is_saved %}true{% else %}false{% endif %}"><svg width="20" height="20" viewBox="0 0 24 24" fill="{% if listing.is_saved %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg></button>
+</form>

@@ -12,11 +12,12 @@
     <script src="{% static 'core/layout.js' %}" defer></script>
     {% block scripts %}{% endblock %}
 </head>
-<body class="roomer-public">
+<body class="{% block body_class %}roomer-public{% endblock %}">
     <a class="skip-link" href="#main-content">Skip to content</a>
     {% comment %}Override header/footer for auth cards; styles, scripts and content are page extension points.{% endcomment %}
     {% block header %}{% include 'core/_header.html' %}{% endblock %}
     {% include 'core/_messages.html' %}
+    {% if user.is_authenticated and not user.is_staff and registration_email_unverified and request.resolver_match.view_name != 'accounts:tenant_profile' %}<div class="site-messages"><div class="site-message">Your registration email is unverified.<form method="post" action="{% url 'accounts:resend_email' %}">{% csrf_token %}<button type="submit">Resend verification link</button></form></div></div>{% endif %}
     {% block page_layout %}
     <main id="main-content" tabindex="-1">
         {% block content %}{% endblock %}

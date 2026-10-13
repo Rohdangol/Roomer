@@ -21,12 +21,19 @@ def register(request):
         try:
             # Roll back a failed insert before querying for a concurrent signup.
             with transaction.atomic():
-                form.save()
+                registered_user = form.save()
         except IntegrityError:
             if not User.objects.filter(email__iexact=form.cleaned_data["email"]).exists():
                 raise
             form.add_error("email", "An account with this email address already exists.")
         else:
+            from .verification_services import send_verification_email
+            try:
+                send_verification_email(registered_user, request)
+            except Exception:
+                messages.warning(request, "Account created. Email delivery failed; sign in to request another verification link.")
+            else:
+                messages.info(request, "Check your email for the verification link (valid for 24 hours).")
             messages.success(request, "Account created successfully. Please sign in.")
             return redirect("accounts:login")
     return render(request, "accounts/register.html", {"form": form})
@@ -51,13 +58,6 @@ def sign_out(request):
     logout(request)
     messages.success(request, "You have been signed out.")
     return redirect("accounts:login")
-
-
-@login_required(login_url="accounts:login")
-def tenant_area(request):
-    if request.user.is_staff or request.user.role != User.Role.TENANT:
-        return HttpResponseForbidden("This page is available to tenants only.")
-    return render(request, "accounts/role_home.html", {"page_title": "Tenant area"})
 
 
 @login_required(login_url="accounts:login")

@@ -42,6 +42,7 @@ Purpose: account identity and authentication. Inherits AbstractUser, retaining u
 | full_name | CharField(150), model optional | Required by registration. |
 | phone_number | CharField(20), model optional | Required by registration; optional leading +, 7–15 ASCII digits; not unique. |
 | role | CharField(10), required, default tenant | tenant / owner only. Admin authority is Django staff/model permissions, not a signup role. |
+| profile_picture | ImageField, optional | Added in accounts.0004; nonanimated JPEG/PNG/WebP, actual-content validation, maximum 5 MB. Randomized files under ignored media/profile_pictures; own-tenant authenticated delivery only, no public storage URL. |
 
 Suspension, identity verification, listing approval and listing availability are independent. Suspension does not erase records. Preserve current inactive-user authentication rejection.
 
@@ -163,7 +164,7 @@ Purpose: store room-matching preferences; location, maximum budget, room type an
 |---|---|---|
 | tenant | OneToOneField(User), required | CASCADE; private configuration, not rental history; tenant role only. |
 | preferred_location | CharField(255), required | Human-readable location. |
-| latitude, longitude | DecimalField(9, 6), required | Same coordinate bounds as listing revisions. |
+| latitude, longitude | DecimalField(9, 6), optional, null/blank allowed | Both supplied within listing coordinate bounds or both null; text-only preferences are valid. |
 | maximum_budget | DecimalField(12, 2), required | >0; maximum monthly budget only, no minimum budget field. |
 | preferred_room_type | CharField(16), required | Same four room-type choices as listings. |
 | preferred_furnishing | CharField(16), required | Same two furnishing choices. |
@@ -246,3 +247,47 @@ Developer A = Tenant work; Developer B = Admin/shared-schema work. Replace label
 | rentals | B, later | Deferred shared lifecycle/models; A implements tenant consumers after agreement. |
 
 Approve revision contract first, then create listings initial migration, then preferences/notifications in parallel. Tenant browsing/preferences and Admin listing review can share the listing schema without competing migrations. Coordinate app dependencies before generating migrations; neither developer edits the other's migration chain. No simultaneous schema variants or rewrites of applied migrations.
+
+
+## Saved Rooms (subsequently authorized)
+
+App: `saved_rooms`; migration owner: Tenant developer (A). SavedRoom has a
+required tenant FK to AUTH_USER_MODEL (CASCADE), required stable RoomListing FK
+(CASCADE), and server-written saved_at. Unique (tenant, listing); index
+(tenant, saved_at). Bookmarks do not replace protected rental/verification
+history. No account/listing model fields change. Normal listing deactivation
+or archive retains bookmarks; unavailable bookmarks render no listing content.
+
+
+## Rental request clarification (later Tenant decision)
+
+See WORKFLOWS.md, "Tenant rental requests: confirmed rules and pending backend",
+for Shru's required schema/service handoff. Move-in is required; message optional;
+occupancy is an explicit positive total including the tenant (superseding the
+proposed derived roommate count for this step). Pending/accepted uniqueness,
+pending-only cancellation and new-record reapplication after rejection/cancellation
+are confirmed. No roommate identities are collected. No rentals model or
+migration was created in the Tenant layout task; migration ownership remains B.
+
+
+Preference onboarding clarification: preferred_furnishing now supports any /
+furnished / unfurnished (preferences.0002). Any is a preference-only choice,
+not a listing value. Preference coordinates are optional as a pair after preferences.0003; listing coordinates remain required. See the
+Home first-search section in WORKFLOWS.md.
+
+
+Text-only preference migration ownership: Rohan (Tenant developer A). Migration
+preferences.0003 alters only nullable preference coordinates and their paired
+constraint; it preserves existing values and is applied in the current local database.
+
+
+## Authorized verification implementation update
+
+Accounts.0005 (applied in the current local database) implements email_verified_at/verified_email
+proof, rate-limited signed email delivery state and immutable TenantIdentityAttempt/
+TenantIdentityReview models. This supersedes previous tenant/email unavailable
+notes. Exact fields, constraints and shared services are documented in
+TENANT_VERIFICATION_HANDOFF.md. Shru owns accounts migrations. Existing
+OwnerVerification is preserved; its separate history-backfill proposal remains
+deferred. Tenant government ID is optional for access; email proof follows
+successful link confirmation only, never registration/login.

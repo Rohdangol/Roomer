@@ -1,0 +1,60 @@
+{% extends 'accounts/base_role.html' %}
+{% load static %}
+{% block title %}Tenant Home | Roomer{% endblock %}
+{% block body_class %}roomer-public tenant-home-page{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'accounts/preference_onboarding.css' %}"><link rel="stylesheet" href="{% static 'accounts/tenant_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/amenity_choices.css' %}">{% endblock %}
+{% block scripts %}<script src="{% static 'accounts/preference_onboarding.js' %}" defer></script><script src="{% static 'accounts/tenant_home.js' %}" defer></script>{% endblock %}
+{% block content %}
+<div class="tenant-home">
+    <section class="tenant-hero tenant-hero-photo" aria-labelledby="hero-title" style="--tenant-hero-image: url('{% static 'accounts/images/Tenant_hero.jpg' %}');">
+        <h1 id="hero-title">Find a place that<br>feels like home.</h1>
+        <p class="hero-intro">Discover rooms and flats that fit your budget, preferences, and lifestyle.</p>
+    </section>
+    <div class="tenant-search-panel">
+        <form class="location-search" method="get" action="{% url 'accounts:tenant' %}">
+            <input type="hidden" name="search" value="1">
+            <label class="search-label" for="location-query">Where do you want to live?</label>
+            <div class="search-controls">
+                <img class="search-location-icon" src="{% static 'accounts/images/location.png' %}" width="18" height="18" alt="">
+                <input id="location-query" name="q" type="search" maxlength="255" value="{{ query }}" placeholder="Where do you want to live?">
+                <button type="submit">Search</button>
+            </div>
+        </form>
+    </div>
+    <div class="tenant-popular">
+        {% if neighbourhoods %}
+            <div class="popular-areas"><span>Popular:</span>{% for neighbourhood in neighbourhoods %}<a href="{% url 'accounts:tenant' %}?search=1&amp;area={{ neighbourhood.published_revision__locality|urlencode }}&amp;city={{ neighbourhood.published_revision__city|urlencode }}">{{ neighbourhood.published_revision__locality }}</a>{% endfor %}</div>
+        {% else %}<p class="hero-empty">Neighbourhood shortcuts will appear when rooms are published.</p>{% endif %}
+    </div>
+
+    {% if has_filter %}
+        <div class="search-feedback" role="status">Showing available rooms for <strong>{% if query %}{{ query }}{% else %}{{ area }}{% if city %}, {{ city }}{% endif %}{% endif %}</strong>. <a href="{% url 'accounts:tenant' %}">Clear search</a></div>
+    {% endif %}
+
+    <section class="rooms-section" aria-labelledby="recommended-title">
+        <div class="section-heading"><div><h2 id="recommended-title">Recommended Rooms</h2><p>Personalized recommendations are not available yet. Here are the latest available rooms{% if has_filter %} matching your location{% endif %}.</p></div><a class="section-disabled" href="{% url 'accounts:find_rooms' %}">View All &rarr;</a></div>
+        <div class="room-grid">
+            {% for listing in latest_rooms %}{% include 'accounts/_room_card.html' with listing=listing %}{% empty %}
+                <div class="empty-state"><h3>{% if has_filter %}No rooms match this location{% else %}No rooms available yet{% endif %}</h3><p>{% if has_filter %}Try a different city, neighbourhood or address.{% else %}Approved, available rooms will appear here once owners publish them.{% endif %}</p></div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <div class="discovery-columns">
+        <section aria-labelledby="fresh-title">
+            <div class="section-heading"><div><h2 id="fresh-title">Fresh on Roomer</h2><p>Recently published rooms you might want to check out.</p></div><a class="section-disabled" href="{% url 'accounts:find_rooms' %}">View All &rarr;</a></div>
+            <div class="fresh-rooms">{% for listing in fresh_rooms %}{% include 'accounts/_room_card.html' with listing=listing compact=True %}{% empty %}<div class="empty-state"><p>No recently published rooms{% if has_filter %} match this location{% endif %}.</p></div>{% endfor %}</div>
+        </section>
+        <section aria-labelledby="neighbourhood-title">
+            <div class="section-heading"><div><h2 id="neighbourhood-title">Browse by Neighbourhood</h2><p>Explore areas with available rooms.</p></div><a class="section-disabled" href="{% url 'accounts:find_rooms' %}">View All &rarr;</a></div>
+            <div class="neighbourhood-list">{% for neighbourhood in neighbourhoods %}<a class="neighbourhood-card" href="{% url 'accounts:tenant' %}?search=1&amp;area={{ neighbourhood.published_revision__locality|urlencode }}&amp;city={{ neighbourhood.published_revision__city|urlencode }}"><span class="neighbourhood-icon" aria-hidden="true">⌂</span><span><h3>{{ neighbourhood.published_revision__locality }}</h3><p>{{ neighbourhood.published_revision__city }}</p></span><span class="room-count">{{ neighbourhood.room_count }} available room{{ neighbourhood.room_count|pluralize }}</span></a>{% empty %}<div class="empty-state"><p>Neighbourhoods will appear as available rooms are published.</p></div>{% endfor %}</div>
+        </section>
+    </div>
+
+    <section class="roommate-banner" aria-labelledby="roommate-title">
+        <div><h2 id="roommate-title">Looking for someone to share a place with?</h2><p>Known-roommate requests are planned for the rental process. Roommate discovery is outside Roomer’s current scope.</p></div>
+        <button type="button" disabled>Find your Roommate <span class="action-note">Unavailable</span></button>
+    </section>
+</div>
+{% if show_preferences %}{% include 'accounts/_preference_onboarding.html' %}{% endif %}
+{% endblock %}

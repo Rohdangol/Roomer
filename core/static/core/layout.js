@@ -56,3 +56,15 @@ document.querySelectorAll(".header-dropdown").forEach((dropdown) => {
         });
     });
 });
+
+// Tenant panel is nonmodal: tab freely; restore the bell when focused panel content closes.
+const tenantNotifications = document.querySelector("[data-tenant-notifications]");
+if (tenantNotifications) {
+    const toggle = tenantNotifications.querySelector("summary");
+    const panel = tenantNotifications.querySelector(".notification-panel");
+    tenantNotifications.addEventListener("toggle", () => {
+        toggle.setAttribute("aria-expanded", String(tenantNotifications.open));
+        if (tenantNotifications.open) panel.querySelector("h2").focus();
+        else if (panel.contains(document.activeElement)) toggle.focus();
+    });
+}

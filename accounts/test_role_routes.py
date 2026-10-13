@@ -31,7 +31,7 @@ class RoleRouteTests(TestCase):
 
     def test_tenant_access_and_cross_role_denials(self):
         self.sign_in(self.tenant)
-        self.assertContains(self.client.get(reverse("accounts:tenant")), "Tenant area")
+        self.assertContains(self.client.get(reverse("accounts:tenant")), "Find a place that")
         self.assertEqual(self.client.get(reverse("accounts:owner")).status_code, 403)
         self.assertEqual(self.client.get(reverse("accounts:admin")).status_code, 403)
 
