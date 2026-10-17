@@ -29,3 +29,10 @@ def validate_identity_document(document):
     document.seek(0)
     if signature is None or not header.startswith(signature):
         raise ValidationError("Upload a JPG, PNG, or PDF document with a matching file format.")
+
+
+def validate_tenant_identity_document(document):
+    from listings.storage import validate_photo
+    if not document.name.lower().endswith((".jpg", ".jpeg", ".png")):
+        raise ValidationError("Upload a JPEG or PNG image, up to 5 MB.")
+    validate_photo(document)

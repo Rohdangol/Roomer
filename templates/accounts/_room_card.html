@@ -1,0 +1,25 @@
+{% with revision=listing.published_revision %}
+<article class="room-card{% if compact %} room-card-compact{% endif %}">
+    <div class="room-photo">
+        {% with photo=revision.photos.all|first %}
+            {% if photo %}
+                <img src="{% url 'accounts:tenant_photo' photo.pk %}" alt="{{ revision.title }}" loading="lazy" data-listing-photo>
+            {% else %}
+                <span>Photo unavailable</span>
+            {% endif %}
+        {% endwith %}
+        {% include 'accounts/_save_room.html' with listing=listing %}
+    </div>
+    <div class="room-card-content">
+        <div class="room-price"><strong>Rs {{ revision.monthly_rent|floatformat:'-2' }}</strong><span>/month</span>{% if not compact %}<span class="room-type">{{ revision.get_room_type_display }}</span>{% endif %}</div>
+        <h3>{{ revision.title }}</h3>
+        <p class="room-location">{{ revision.locality }}, {{ revision.city }}</p>
+        {% if not compact %}
+            <ul class="room-amenities" aria-label="Amenities">
+                {% for link in revision.amenity_links.all %}<li>{{ link.amenity.name }}</li>{% empty %}<li>No amenities listed</li>{% endfor %}
+            </ul>
+            <a class="room-details" href="{% url 'accounts:room_details' listing.pk %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}">View Details</a>
+        {% endif %}
+    </div>
+</article>
+{% endwith %}

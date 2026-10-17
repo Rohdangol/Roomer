@@ -1,0 +1,12 @@
+{% extends 'accounts/base_role.html' %}
+{% load static %}
+{% block title %}My Requests | Roomer{% endblock %}
+{% block body_class %}roomer-public tenant-home-page tenant-requests-page{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'accounts/tenant_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/tenant_requests.css' %}">{% endblock %}
+{% block content %}
+<section class="requests-content" aria-labelledby="requests-title"><h1 id="requests-title">My Requests</h1><p class="requests-intro">Track the rooms you have requested and their current status.</p>
+{# Replace disabled filters with real status queries only after the rentals contract is agreed. #}
+<nav class="request-tabs" aria-label="Request status"><a href="{% url 'accounts:my_requests' %}" aria-current="page">All</a><span aria-disabled="true">Pending</span><span aria-disabled="true">Accepted</span><span aria-disabled="true">Rejected</span></nav>
+<div class="request-empty"><h2>Rental requests are not available yet</h2><p>You can browse rooms now. Submission and tracking will be enabled once the request workflow is ready.</p><a href="{% url 'accounts:find_rooms' %}">Find Rooms</a></div>
+</section>
+{% endblock %}

@@ -1,4 +1,5 @@
-.site-header { background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+/* Keep navigation visible above page content and maps while scrolling. */
+.site-header { position: sticky; top: 0; z-index: 30; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
 .header-content { max-width: 1100px; margin: auto; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .site-brand { font-size: 28px; font-weight: 700; text-decoration: none; }
 .site-navigation { display: flex; align-items: center; flex-wrap: wrap; gap: 20px; }
@@ -46,3 +47,5 @@
     .notifications { width: 100%; }
     .notification-panel { position: static; width: 100%; margin-top: 12px; }
 }
+
+.message-icon { flex: 0 0 20px; margin-top: 2px; }

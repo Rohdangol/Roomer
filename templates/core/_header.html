@@ -1,14 +1,18 @@
+{% load static %}
 <header class="site-header">
     <div class="header-content">
-        <a class="site-brand display-text" href="{% if user.is_authenticated %}{% url navigation_destination %}{% else %}{% url 'home' %}{% endif %}" aria-label="Roomer home"><span class="header-logo">Roomer logo placeholder</span></a>
+        <a class="site-brand display-text" href="{% if user.is_authenticated %}{% url navigation_destination %}{% else %}{% url 'home' %}{% endif %}" aria-label="Roomer home"><img class="header-logo" src="{% static 'accounts/images/Favicon.png' %}" width="44" height="44" alt="Roomer"></a>
         <button class="menu-toggle" type="button" aria-controls="site-navigation" aria-expanded="false" hidden>Menu</button>
         <nav class="site-navigation" id="site-navigation" aria-label="Main navigation">
             {% include 'core/_navigation.html' %}
         </nav>
         <div class="header-controls">
             {% if user.is_authenticated %}
+                {% if user.role == 'tenant' and not user.is_staff %}
+                    {% include 'core/_tenant_notifications.html' %}
+                {% else %}
                 <details class="notifications header-dropdown">
-                    <summary aria-label="Notifications" title="Notifications"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"/><path d="M10 21h4"/></svg></summary>
+                    <summary aria-label="Notifications" title="Notifications">{% if user.role == 'tenant' and not user.is_staff %}<img class="tenant-navbar-icon" src="{% static 'accounts/images/Notification.png' %}" width="22" height="22" alt="">{% else %}<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"/><path d="M10 21h4"/></svg>{% endif %}</summary>
                     <div class="notification-panel">
                         <strong>Notifications</strong>
                         {% if user.role == 'owner' and not user.is_staff %}
@@ -27,6 +31,13 @@
                         {% endif %}
                     </div>
                 </details>
+                {% endif %}
+                {% if user.role == 'tenant' and not user.is_staff %}
+                {# Tenant profile is a normal link; logout lives on the Profile page. #}
+                <a class="tenant-profile-link" href="{% url 'accounts:tenant_profile' %}"{% if request.resolver_match.view_name == 'accounts:tenant_profile' %} aria-current="page"{% endif %}>
+                    {% if user.profile_picture %}<img class="tenant-navbar-avatar" src="{% url 'accounts:profile_picture' %}" width="32" height="32" alt="">{% else %}<img class="tenant-navbar-icon" src="{% static 'accounts/images/profile.png' %}" width="22" height="22" alt="">{% endif %}<span>{{ user.full_name|default:user.email }}</span>
+                </a>
+                {% else %}
                 <details class="profile-control header-dropdown">
                     <summary><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/></svg><span>{{ user.full_name|default:user.email }}</span></summary>
                     <div class="profile-panel">
@@ -37,6 +48,7 @@
                         </form>
                     </div>
                 </details>
+                {% endif %}
             {% else %}
                 <a href="{% url 'accounts:login' %}">Sign In</a>
                 <a href="{% url 'accounts:register' %}">Create Account</a>

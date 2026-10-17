@@ -2,6 +2,7 @@
     <section class="site-messages" aria-label="Notifications and messages">
         {% for message in messages %}
             <div class="site-message {{ message.tags }}" role="{% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}alert{% else %}status{% endif %}">
+                <svg class="message-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/>{% if message.level_tag == 'success' %}<path d="m7 12 3 3 7-7"/>{% else %}<path d="M12 7v6m0 3v1"/>{% endif %}</svg>
                 <p><strong>{{ message.level_tag|title }}:</strong> {{ message }}</p>
                 <button type="button" class="message-dismiss" aria-label="Dismiss message" hidden>×</button>
             </div>

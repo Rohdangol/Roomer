@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "listings.apps.ListingsConfig",
     "preferences.apps.PreferencesConfig",
     "notifications.apps.NotificationsConfig",
+    "saved_rooms.apps.SavedRoomsConfig",
 ]
 
 AUTH_USER_MODEL = "accounts.User"
@@ -145,3 +146,13 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+
+# SMTP is optional locally; console delivery remains the default.
+EMAIL_HOST = os.getenv("EMAIL_HOST", "")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() == "true"
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "False").lower() == "true"
+EMAIL_TIMEOUT = 15

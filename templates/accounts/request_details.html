@@ -1,0 +1,14 @@
+{% extends 'accounts/base_role.html' %}
+{% load static %}
+{% block title %}Rental Request | Roomer{% endblock %}
+{% block body_class %}roomer-public tenant-home-page tenant-requests-page{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'accounts/tenant_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/tenant_requests.css' %}">{% endblock %}
+{% block content %}
+<div class="requests-content"><a class="request-back" href="{% url 'accounts:my_requests' %}">Back to My Requests</a><h1>Rental Request</h1>
+{# Future view must first resolve an owned request and explicitly authorize listing/owner display data. #}
+{% block request_summary %}{% endblock %}
+{% block request_progress %}<section class="request-progress-section" aria-labelledby="request-status-title"><h2 id="request-status-title">Request Status</h2><p>Status tracking is unavailable until rental requests are enabled.</p><ol class="request-progress" aria-label="Planned request stages"><li>Request Sent</li><li>Owner Review</li><li>Decision</li></ol></section>{% endblock %}
+<div class="request-detail-columns">{% block request_information %}<section><h2>Request Details</h2><p>Move-in date, total occupancy and your optional message will appear for your submitted request.</p></section>{% endblock %}{% block request_owner %}<section><h2>Room Owner</h2><p>Permitted owner information will appear alongside an available requested room.</p></section>{% endblock %}</div>
+{% block request_actions %}<div class="request-empty"><h2>Request details are not available yet</h2><p>No rental-request record is displayed. Submission and cancellation await the agreed workflow.</p></div>{% endblock %}
+</div>
+{% endblock %}

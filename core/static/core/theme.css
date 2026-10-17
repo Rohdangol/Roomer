@@ -1,20 +1,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Outfit:wght@100..900&display=swap');
 
-/* Public pages opt in with this class; Django admin keeps its own styles. */
-.roomer-public {
-    --color-primary: #0F766E;
-    --color-primary-hover: #115E59;
-    --color-primary-soft: #F0FDFA;
-    --color-background: #F8FAFC;
-    --color-surface: #FFFFFF;
+/* Shared palette for public, account and custom admin shells. */
+:root {
+    --color-primary: #114539;
+    --color-primary-hover: #236D4A;
+    --color-primary-soft: var(--color-background);
+    --color-background: #F7F7F7;
+    --color-surface: var(--color-background);
     --color-text: #0F172A;
-    --color-text-muted: #475569;
-    --color-border: #CBD5E1;
-    --color-error: #B91C1C;
-    --color-success: #15803D;
+    --color-text-muted: color-mix(in srgb, var(--color-text) 78%, transparent);
+    --color-border: color-mix(in srgb, var(--color-text) 24%, transparent);
+    --color-error: var(--color-text);
+    --color-success: var(--color-primary);
+    --color-secondary: var(--color-primary-hover);
+    --color-overlay: color-mix(in srgb, var(--color-text) 55%, transparent);
     --font-heading: "Outfit", sans-serif;
     --font-body: "Manrope", sans-serif;
 
+}
+
+.roomer-public {
     margin: 0;
     background: var(--color-background);
     color: var(--color-text);
@@ -42,6 +47,29 @@
 .roomer-public a:hover { color: var(--color-primary-hover); }
 
 .roomer-public :focus-visible {
-    outline: 3px solid var(--color-primary);
+    outline: 3px solid var(--color-secondary);
     outline-offset: 3px;
 }
+
+/* Shared control states keep text readable without changing page geometry. */
+.roomer-public input, .roomer-public select, .roomer-public textarea {
+    accent-color: var(--color-secondary);
+    color: var(--color-text);
+}
+.roomer-public button:disabled, .roomer-public input:disabled,
+.roomer-public select:disabled, .roomer-public textarea:disabled {
+    cursor: not-allowed;
+    opacity: .65;
+}
+.roomer-public button:active:not(:disabled) { border-color: var(--color-secondary); }
+.roomer-public input:focus-visible, .roomer-public select:focus-visible,
+.roomer-public textarea:focus-visible { border-color: var(--color-secondary); }
+.roomer-public .errorlist, .roomer-public .errors { font-weight: 600; }
+
+.roomer-public button { background: var(--color-primary); color: var(--color-surface); }
+.roomer-public button:hover:not(:disabled), .roomer-public button:active:not(:disabled) {
+    background: var(--color-secondary); color: var(--color-surface);
+}
+.roomer-public input, .roomer-public textarea, .roomer-public select { background-color: var(--color-surface); }
+.roomer-public input::placeholder, .roomer-public textarea::placeholder { color: var(--color-text-muted); opacity: 1; }
+.roomer-public .room-details, .roomer-public .room-details:hover { color: var(--color-surface); }

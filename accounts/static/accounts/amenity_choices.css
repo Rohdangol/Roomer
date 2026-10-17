@@ -1,0 +1,9 @@
+/* Keep actual checkbox inputs and label activation; only their visual shape changes. */
+.preference-onboarding #id_amenities, .find-rooms-page #id_amenities { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 18px; }
+.preference-onboarding #id_amenities label, .find-rooms-page #id_amenities label { display:flex; align-items:center; gap:9px; cursor:pointer; font-size:14px; overflow-wrap:anywhere; }
+.preference-onboarding #id_amenities input, .find-rooms-page #id_amenities input { appearance:none; -webkit-appearance:none; flex:0 0 19px; width:19px; height:19px; margin:0; padding:0; border:1.5px solid var(--color-text-muted); border-radius:50%; background:var(--color-surface); display:grid; place-items:center; cursor:pointer; }
+.preference-onboarding #id_amenities input:checked, .find-rooms-page #id_amenities input:checked { border-color:var(--color-secondary); }
+.preference-onboarding #id_amenities input:checked::after, .find-rooms-page #id_amenities input:checked::after { content:""; width:4px; height:8px; border:solid var(--color-secondary); border-width:0 2px 2px 0; transform:translateY(-1px) rotate(45deg); }
+.preference-onboarding #id_amenities input:focus-visible, .find-rooms-page #id_amenities input:focus-visible { outline:3px solid var(--color-secondary); outline-offset:3px; }
+@media(max-width:380px) { .preference-onboarding #id_amenities, .find-rooms-page #id_amenities { grid-template-columns:minmax(0,1fr); } }
+@media(forced-colors:active) { .preference-onboarding #id_amenities input, .find-rooms-page #id_amenities input { appearance:auto; -webkit-appearance:auto; } .preference-onboarding #id_amenities input::after, .find-rooms-page #id_amenities input::after { display:none; } }

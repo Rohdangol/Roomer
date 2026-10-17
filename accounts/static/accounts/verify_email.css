@@ -1,0 +1,5 @@
+/* Center only the email confirmation page, including its error state. */
+.roomer-public .home-panel { width:calc(100% - 32px); max-width:720px; margin:48px auto; padding:24px; text-align:center; overflow-wrap:anywhere; }
+.roomer-public .home-panel h1 { margin:0 0 20px; }
+.roomer-public .home-panel form { display:flex; justify-content:center; margin-top:24px; }
+@media(max-width:540px) { .roomer-public .home-panel { margin:28px auto; padding:16px; } }

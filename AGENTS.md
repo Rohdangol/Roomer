@@ -17,9 +17,10 @@ Apply these guidelines to all future work in this project:
 
 ## Checks and testing
 
-- Styling-only changes: use visual or manual checks; do not run an automated suite.
-- Behaviour changes: run focused tests relevant to the changed behaviour.
-- Authentication, permissions, models, and migrations: run appropriate automated checks, including relevant tests and Django's system check.
-- Run the full relevant suite at completed milestones before merging or pushing.
-- Do not repeat passed checks unless subsequent changes affect them, or a milestone requires the full relevant suite.
+- Use manual/browser checks by default for all Roomer tasks.
+- Do not write or run automated tests unless absolutely necessary, including for behaviour, authentication, permissions, models, or migrations.
+- If an automated check is essential, briefly explain why before running only the smallest relevant check.
+- Do not automatically run suites after tasks or milestones, including before merging or pushing.
+- Do not repeat passed checks.
+- Keep reports short and accurately state what was checked; do not imply automated verification when only manual checks were performed.
 - Documentation-only changes do not need tests.
