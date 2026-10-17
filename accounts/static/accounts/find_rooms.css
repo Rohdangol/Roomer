@@ -13,7 +13,7 @@
 .filter-field select, .filter-field input[type=number] { width: 100%; min-width: 0; padding: 12px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); }
 .filter-field #id_amenities { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .filter-field #id_amenities label { font-size: 13px; display: flex; align-items: center; gap: 8px; overflow-wrap: anywhere; }
-.filter-field input[type=checkbox] { accent-color: var(--color-primary); flex-shrink: 0; }
+.filter-field input[type=checkbox] { accent-color: var(--color-secondary); flex-shrink: 0; }
 .apply-filters { width: 100%; margin-top: 24px; border-radius: 999px !important; }
 .filter-errors { color: var(--color-error); font-size: 14px; overflow-wrap: anywhere; }
 .results-heading { margin-bottom: 30px; align-items: flex-start; }
@@ -38,9 +38,9 @@ fieldset.filter-field { min-width: 0; border: 0; border-top: 1px solid var(--col
 .filter-field legend + * { clear: both; }
 #id_room_type, #id_furnishing { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 #id_room_type label, #id_furnishing label { display: flex; align-items: center; gap: 6px; border: 1px solid var(--color-border); border-radius: 999px; padding: 8px; font-size: 12px; cursor: pointer; }
-#id_room_type input, #id_furnishing input { accent-color: var(--color-primary); margin: 0; }
-#id_room_type label:has(:checked), #id_furnishing label:has(:checked) { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-surface); }
-#id_room_type label:focus-within, #id_furnishing label:focus-within { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+#id_room_type input, #id_furnishing input { accent-color: var(--color-secondary); margin: 0; }
+#id_room_type label:has(:checked), #id_furnishing label:has(:checked) { border-color: var(--color-secondary); background: var(--color-secondary); color: var(--color-surface); }
+#id_room_type label:focus-within, #id_furnishing label:focus-within { outline: 2px solid var(--color-secondary); outline-offset: 3px; }
 
 /* Keep Leaflet panes below the shared profile/menu controls. */
 #room-location-map { height: 260px; width: 100%; border-radius: 14px; border: 1px solid var(--color-border); isolation: isolate; background: var(--color-background); }

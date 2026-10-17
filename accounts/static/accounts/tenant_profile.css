@@ -29,7 +29,7 @@
 .preference-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 24px; }
 .full-width { grid-column:1/-1; }
 #id_amenities { display:flex; flex-wrap:wrap; gap:16px; }
-#id_amenities input { accent-color:var(--color-primary); }
+#id_amenities input { accent-color:var(--color-secondary); }
 #preference-location-map { height:280px; border-radius:18px; background:var(--color-primary-soft); isolation:isolate; }
 #preference-map-status { font-size:13px; color:var(--color-text-muted); }
 .account-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
@@ -64,9 +64,9 @@
 .identity-document-choice legend { font-family:var(--font-heading); font-size:20px; font-weight:600; margin-bottom:12px; padding:0; }
 .identity-document-types { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
 .identity-document-types label { display:flex; align-items:center; justify-content:center; gap:10px; min-width:0; padding:12px 16px; border:1px solid var(--color-border); border-radius:999px; background:var(--color-surface); cursor:pointer; }
-.identity-document-types input[type=radio] { flex:0 0 auto; width:18px; height:18px; margin:0; accent-color:var(--color-primary); }
-.identity-document-types label:has(input:checked) { background:var(--color-primary-soft); border-color:var(--color-primary); color:var(--color-primary); font-weight:700; }
-.identity-document-types label:focus-within { outline:3px solid var(--color-primary); outline-offset:3px; }
+.identity-document-types input[type=radio] { flex:0 0 auto; width:18px; height:18px; margin:0; accent-color:var(--color-secondary); }
+.identity-document-types label:has(input:checked) { background:var(--color-primary-soft); border-color:var(--color-secondary); color:var(--color-secondary); font-weight:700; }
+.identity-document-types label:focus-within { outline:3px solid var(--color-secondary); outline-offset:3px; }
 .identity-details-grid, .identity-upload-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
 .identity-detail-field { min-width:0; }
 .identity-detail-field label { display:block; font-weight:600; margin-bottom:8px; }

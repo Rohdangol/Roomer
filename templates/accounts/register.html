@@ -8,16 +8,11 @@
     <script src="{% static 'accounts/password-controls.js' %}" defer></script>
 {% endblock %}
 {% block content %}
-    <div class="registration-card">
+    <div class="registration-card signup-card">
         <section class="welcome" aria-labelledby="welcome-title">
             <div class="welcome-intro">
                 <div class="logo-area">
-                    {% comment %}
-                    Once accounts/static/accounts/images/roomer-logo.svg exists, replace the placeholder span with:
-                    <img src="{% static 'accounts/images/roomer-logo.svg' %}" alt="Roomer">
-                    The logo-area image styles use object-fit: contain to avoid cropping.
-                    {% endcomment %}
-                    <span class="logo-placeholder">Roomer logo placeholder</span>
+                    <img src="{% static 'accounts/images/Logo.png' %}" alt="Roomer">
                 </div>
                 <h2 id="welcome-title">Your journey starts here.</h2>
                 <p>Find your next home.</p>

@@ -1,5 +1,13 @@
 /* Reuse registration's card and form styles; keep login-specific sizing here. */
-.login-card { min-height: 640px; }
+.login-card { min-height: 0; }
+.login-card .logo-area { margin-bottom: 12px; }
+/* Stretch the panel, then center its content with equal top/bottom padding. */
+.login-card .welcome {
+    align-self: stretch;
+    justify-content: center;
+    padding-block: 40px;
+}
+.login-card .welcome > * { flex-shrink: 0; }
 
 .login-card .registration {
     display: flex;
@@ -7,11 +15,14 @@
     justify-content: center;
     align-items: stretch;
     text-align: left;
+    padding-block: 40px;
 }
 
 /* Keep natural content height so messages and small windows can scroll safely. */
 .login-card .registration > * { flex-shrink: 0; }
+.login-card .signin-note { margin-bottom: 0; }
 
 @media (max-width: 700px) {
     .login-card { min-height: 0; }
+    .login-card .welcome, .login-card .registration { padding-block: 28px; }
 }

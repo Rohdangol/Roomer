@@ -1,7 +1,7 @@
 {% load static %}
 <header class="site-header">
     <div class="header-content">
-        <a class="site-brand display-text" href="{% if user.is_authenticated %}{% url navigation_destination %}{% else %}{% url 'home' %}{% endif %}" aria-label="Roomer home"><span class="header-logo">Roomer logo placeholder</span></a>
+        <a class="site-brand display-text" href="{% if user.is_authenticated %}{% url navigation_destination %}{% else %}{% url 'home' %}{% endif %}" aria-label="Roomer home"><img class="header-logo" src="{% static 'accounts/images/Favicon.png' %}" width="44" height="44" alt="Roomer"></a>
         <button class="menu-toggle" type="button" aria-controls="site-navigation" aria-expanded="false" hidden>Menu</button>
         <nav class="site-navigation" id="site-navigation" aria-label="Main navigation">
             {% include 'core/_navigation.html' %}

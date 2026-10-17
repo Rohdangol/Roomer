@@ -113,7 +113,7 @@
 .roommate-banner p { max-width: 880px; }
 .roommate-banner button { border-radius: 999px; padding: 8px 24px; }
 .tenant-home-page .header-content { max-width: 1320px; min-height: 90px; padding: 16px 0; grid-template-columns: minmax(160px, 1fr) auto minmax(210px, 1fr); }
-.tenant-home-page .header-logo { width: 72px; height: 54px; min-height: 0; font-size: 9px; line-height: 1.1; padding: 4px; border-radius: 999px; overflow-wrap: normal; }
+.tenant-home-page .header-logo { width: 48px; height: 48px; }
 .tenant-home-page .site-navigation { gap: 36px; }
 .tenant-home-page .site-navigation a[aria-current] { background: var(--color-primary); color: var(--color-surface); padding: 12px 20px; }
 .tenant-home-page .profile-control summary { border: 1px solid var(--color-border); border-radius: 8px; }
@@ -174,7 +174,7 @@
 
 /* Only the two search-page heroes opt into the decorative photo and overlay. */
 .tenant-hero-photo {
-    background-image: linear-gradient(rgb(0 0 0 / 50%), rgb(0 0 0 / 50%)), var(--tenant-hero-image);
+    background-image: linear-gradient(var(--color-overlay), var(--color-overlay)), var(--tenant-hero-image);
     background-size: cover;
     background-position: center;
 }

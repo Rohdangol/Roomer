@@ -1,0 +1,8 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block extrastyle %}{{ block.super }}
+<link rel="icon" type="image/png" href="{% static 'accounts/images/Favicon.png' %}">
+<link rel="stylesheet" href="{% static 'core/theme.css' %}">
+<link rel="stylesheet" href="{% static 'core/admin_theme.css' %}">
+{% endblock %}
+{% block branding %}<a href="{% url 'admin:index' %}" aria-label="Roomer administration"><img class="admin-logo" src="{% static 'accounts/images/Logo.png' %}" alt="Roomer"></a>{% endblock %}
