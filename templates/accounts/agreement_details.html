@@ -2,17 +2,17 @@
 {% load static %}
 {% block title %}Rental Agreement | Roomer{% endblock %}
 {% block body_class %}roomer-public tenant-home-page tenant-agreements-page{% endblock %}
-{% block styles %}<link rel="stylesheet" href="{% static 'accounts/tenant_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/tenant_requests.css' %}"><link rel="stylesheet" href="{% static 'accounts/tenant_agreements.css' %}">{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'accounts/tenant_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/tenant_requests.css' %}"><link rel="stylesheet" href="{% static 'accounts/tenant_agreements.css' %}"><link rel="stylesheet" href="{% static 'accounts/rental_workflows.css' %}">{% endblock %}
 {% block content %}
 <div class="requests-content agreement-details"><a class="request-back" href="{% url 'accounts:my_agreements' %}">Back to Agreements</a><h1>Rental Agreement</h1>
 {# Extension points accept only an owned agreement and authorized snapshot/party display data. #}
-{% block agreement_availability %}<p class="agreement-notice" role="status">Agreement details are unavailable until the rental-agreement backend is implemented. No agreement record is displayed.</p>{% endblock %}
-{% block agreement_metadata %}{% endblock %}
-{% block agreement_listing %}<section class="agreement-section"><h2>Room</h2><div class="agreement-placeholder">The authorized listing summary will appear for your agreement.</div></section>{% endblock %}
-{% block agreement_summary %}<section class="agreement-section"><h2>Agreement Summary</h2><div class="agreement-summary-layout"><div><h3>Monthly Rent</h3><p>Unavailable</p></div><div><h3>Security Deposit</h3><p>Unavailable</p></div><div><h3>Payment Due</h3><p>Unavailable</p></div><div><h3>Occupancy</h3><p>Unavailable</p></div><div><h3>Duration</h3><p>Unavailable</p></div></div></section>{% endblock %}
-<div class="agreement-parties">{% block agreement_tenant %}<section><h2>Tenant</h2><div class="agreement-placeholder">Party information will appear for the owned agreement.</div></section>{% endblock %}{% block agreement_owner %}<section><h2>Owner</h2><div class="agreement-placeholder">Permitted owner information will appear here.</div></section>{% endblock %}</div>
-<div class="agreement-terms-layout">{% block agreement_house_rules %}<section><h2>House Rules</h2><p>Agreement-specific rules are not available yet.</p></section>{% endblock %}{% block agreement_terms %}<section><h2>Terms &amp; Conditions</h2><p>Agreed terms are not available yet.</p></section>{% endblock %}</div>
-{% block agreement_confirmation %}<section class="agreement-section"><h2>Agreement Confirmation</h2><div class="agreement-confirmations"><div><h3>Confirmed by Tenant</h3><p>Confirmation date unavailable</p></div><div><h3>Confirmed by Owner</h3><p>Confirmation date unavailable</p></div></div><button type="button" disabled>Confirm Agreement (not available yet)</button></section>{% endblock %}
-{% block agreement_download %}<button class="agreement-download" type="button" disabled>Download Agreement (not available yet)</button>{% endblock %}
+{% block agreement_availability %}{% endblock %}
+{% block agreement_metadata %}{% include 'accounts/_agreement_metadata.html' %}{% endblock %}
+{% block agreement_listing %}<section class="agreement-section"><h2>Room</h2>{% include 'accounts/_agreement_room.html' %}</section>{% endblock %}
+{% block agreement_summary %}<section class="agreement-section"><h2>Agreement Summary</h2>{% include 'accounts/_agreement_terms.html' %}</section>{% endblock %}
+<div class="agreement-parties">{% block agreement_tenant %}<section><h2>Tenant</h2>{% include 'accounts/_agreement_party.html' with party=terms.tenant_snapshot %}</section>{% endblock %}{% block agreement_owner %}<section><h2>Owner</h2>{% include 'accounts/_agreement_party.html' with party=terms.owner_snapshot %}</section>{% endblock %}</div>
+<div class="agreement-terms-layout">{% block agreement_house_rules %}<section><h2>House Rules</h2>{% include 'accounts/_agreement_rules.html' %}</section>{% endblock %}{% block agreement_terms %}<section><h2>Terms &amp; Conditions</h2><div class="rental-message">{{ terms.additional_terms }}</div></section>{% endblock %}</div>
+{% block agreement_confirmation %}<section class="agreement-section"><h2>Agreement Confirmation</h2>{% include 'accounts/_agreement_confirmations.html' %}</section>{% endblock %}
+{% block agreement_download %}{% include 'accounts/_agreement_actions.html' %}{% endblock %}
 </div>
 {% endblock %}

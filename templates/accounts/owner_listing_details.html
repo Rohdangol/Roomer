@@ -1,0 +1,48 @@
+{% extends 'accounts/base_role.html' %}
+{% load static %}
+{% block title %}Listing Details | Roomer{% endblock %}
+{% block body_class %}roomer-public owner-home-page owner-details-page{% endblock %}
+{% block styles %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""><link rel="stylesheet" href="{% static 'accounts/owner_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/room_details.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_listing_details.css' %}">{% endblock %}
+{% block scripts %}<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script><script src="{% static 'accounts/room_map.js' %}" defer></script><script src="{% static 'accounts/room_details.js' %}" defer></script><script src="{% static 'accounts/owner_revision_preview.js' %}" defer></script>{% endblock %}
+{% block content %}
+<div class="owner-home room-detail-content">
+<a class="back-link" href="{% url 'accounts:owner_listings' %}">&larr; Back to My Listings</a>
+<h1>Listing Details</h1>
+{% if revision %}
+<section class="owner-version-notice" aria-labelledby="owner-version-title">
+<h2 id="owner-version-title">{% if showing_published %}Published details{% elif pending_revision %}Pending submission &mdash; awaiting Admin approval{% elif revision.approval_status == 'rejected' %}Rejected submission &mdash; not published{% else %}Unpublished submission{% endif %}</h2>
+{% if showing_published %}<p>The details, amenities and photos below are the last approved version. Submitted changes do not replace them until approved.</p>{% else %}<p>This listing has never been approved. The details below are an unpublished submission, not an approved version.</p>{% endif %}
+{% if pending_revision %}<p>Changes submitted for Admin review. You can edit and resubmit while review is pending. Preview Changes shows the latest submission.</p>{% endif %}
+{% if latest_revision.approval_status == 'rejected' %}<p>Latest submission rejected: {{ latest_revision.rejection_reason|default:'No reason provided' }}</p>{% endif %}
+</section>
+{% endif %}
+{% if revision %}
+<section class="detail-top" aria-labelledby="room-title">
+<div class="detail-gallery">
+{% if photos %}<div class="gallery-main room-photo"><img id="gallery-main-photo" src="{% url 'accounts:owner_photo' photos.0.pk %}" alt="{{ revision.title }}"></div><div class="gallery-thumbnails">{% for photo in photos %}<a href="{% url 'accounts:owner_photo' photo.pk %}" data-gallery-photo aria-label="Show room photo {{ forloop.counter }}"><img src="{% url 'accounts:owner_photo' photo.pk %}" alt="Room photo {{ forloop.counter }}" loading="lazy"></a>{% endfor %}</div>{% else %}<div class="gallery-main room-photo">Photos unavailable</div>{% endif %}
+</div>
+<div class="detail-summary"><div class="detail-title"><h2 id="room-title">{{ revision.title }}</h2></div><p>{{ revision.location_display }}</p><p>{{ revision.address }}</p><p class="detail-rent">Rs {{ revision.monthly_rent|floatformat:'-2' }}<span>/month</span></p>
+<p>Listing availability: <span class="detail-pill">{{ listing.get_listing_status_display }}</span></p><p>Displayed revision approval: <span class="detail-pill">{{ revision.get_approval_status_display }}</span></p>
+{% if revision.rejection_reason %}<p>Review feedback: {{ revision.rejection_reason }}</p>{% endif %}
+<p>Attributes: <span class="detail-pill">{{ revision.get_room_type_display }}</span> <span class="detail-pill">{{ revision.get_furnishing_display }}</span></p>
+<h2>Amenities</h2><ul class="detail-amenities">{% for link in revision.amenity_links.all %}<li>{{ link.amenity.name }}</li>{% empty %}<li>No amenities listed</li>{% endfor %}</ul>
+<dl class="summary-facts"><div><dt>Security Deposit</dt><dd>Rs {{ revision.security_deposit|floatformat:'-2' }} (one-time)</dd></div><div><dt>Available From</dt><dd>{{ revision.available_from|date:'F j, Y' }}</dd></div><div><dt>Maximum Occupancy</dt><dd>Up to {{ revision.maximum_occupants }} people</dd></div></dl>
+<div class="owner-edit-actions">{% if can_edit %}<a class="owner-view-all owner-edit-main" href="{% url 'accounts:owner_edit_listing' listing.pk %}">Edit Listing</a>{% else %}<button type="button" disabled>Edit Listing</button>{% endif %}<button type="button" id="open-revision-preview" aria-haspopup="dialog" aria-controls="revision-preview"{% if not pending_revision %} disabled{% endif %}>Preview Changes</button></div>
+</div></section>
+<section class="detail-overview"><div class="owner-detail-heading"><h2>Room Overview</h2>{% if can_edit %}<a class="owner-view-all" href="{% url 'accounts:owner_edit_listing' listing.pk %}#section-1">Edit Room Details</a>{% endif %}</div>
+<dl class="overview-facts"><div><dt>Room Type</dt><dd>{{ revision.get_room_type_display }}</dd></div><div><dt>Bathroom</dt><dd>{{ revision.bathroom_details|default:'Not specified' }}</dd></div><div><dt>Furnishing</dt><dd>{{ revision.get_furnishing_display }}</dd></div><div><dt>Floor</dt><dd>{{ revision.floor|default:'Not specified' }}</dd></div><div><dt>Occupancy</dt><dd>Up to {{ revision.maximum_occupants }} people</dd></div></dl>
+<div class="owner-detail-heading"><h2>About this Room</h2>{% if can_edit %}<a class="owner-view-all" href="{% url 'accounts:owner_edit_listing' listing.pk %}#section-5">Edit About</a>{% endif %}</div><div class="detail-description">{{ revision.description|linebreaks }}</div></section>
+<div class="detail-lower"><div><section><div class="owner-detail-heading"><h2>House Rules</h2>{% if can_edit %}<a class="owner-view-all" href="{% url 'accounts:owner_edit_listing' listing.pk %}#section-6">Edit Rules</a>{% endif %}</div><ul class="house-rules"><li>Cooking: {{ revision.cooking_allowed|yesno:'Allowed,Not allowed' }}</li><li>Visitors: {{ revision.visitors_allowed|yesno:'Allowed,Not allowed' }}</li><li>Smoking: {{ revision.smoking_allowed|yesno:'Allowed,Not allowed' }}</li><li>Pets: {{ revision.pets_allowed|yesno:'Allowed,Not allowed' }}</li><li>Quiet hours: {% if revision.quiet_hours_start and revision.quiet_hours_end %}{{ revision.quiet_hours_start|time:'g:i A' }} to {{ revision.quiet_hours_end|time:'g:i A' }}{% else %}Not specified{% endif %}</li></ul>{{ revision.additional_rules|linebreaks }}</section>
+<section><h2>Listing Management</h2><dl class="summary-facts"><div><dt>Published On</dt><dd>{% if listing.published_at %}{{ listing.published_at|date:'M j, Y' }}{% else %}Not published{% endif %}</dd></div><div><dt>Last Updated</dt><dd>{{ last_updated|date:'M j, Y, g:i A' }}</dd></div></dl>{% if not listing.published_revision_id %}<p>This listing is unpublished. Approval is required before it becomes available to tenants.</p>{% endif %}</section></div>
+<section class="detail-location"><h2>Location</h2>{{ location_point|json_script:'room-location-point' }}<div id="detail-location-map" aria-label="Room location map" tabindex="0"></div><p id="detail-map-status" role="status">Coordinates: {{ revision.latitude }}, {{ revision.longitude }}.</p></section></div>
+{% else %}<div class="owner-empty"><p>No listing details have been saved.</p></div>{% endif %}
+{% if pending_revision %}{% include 'accounts/_owner_revision_preview.html' %}{% endif %}
+<section class="owner-availability" aria-label="Listing availability">
+{% if listing.listing_status == 'available' or can_activate %}
+<details><summary>{% if listing.listing_status == 'available' %}Deactivate{% else %}Activate{% endif %} Listing</summary>
+<form method="post" action="{% url 'accounts:owner_listing_availability' listing.pk %}">{% csrf_token %}<input type="hidden" name="action" value="{% if listing.listing_status == 'available' %}deactivate{% else %}activate{% endif %}"><p>{% if listing.listing_status == 'available' %}Deactivating hides this listing from tenant searches.{% else %}Activating makes the approved listing available to tenants.{% endif %}</p><label><input type="checkbox" name="confirm" value="yes" required> I confirm this availability change.</label><button type="submit">Confirm {% if listing.listing_status == 'available' %}Deactivation{% else %}Activation{% endif %}</button></form></details>
+{% elif listing.listing_status == 'occupied' or listing.listing_status == 'reserved' %}<button type="button" disabled>Availability change unavailable</button><p>Reserved or occupied listings cannot be deactivated while a binding agreement exists.</p>
+{% else %}<button type="button" disabled>Activate Listing</button><p>Activation requires an approved published listing with no pending or rejected changes.</p>{% endif %}
+</section>
+</div>
+{% endblock %}

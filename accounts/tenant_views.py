@@ -48,7 +48,8 @@ def home(request):
     rooms = search_rooms({"q": query, "area": area, "city": city}, tenant=request.user)
     # No matching algorithm is agreed yet: this fallback is explicitly newest-first.
     latest_rooms = list(rooms[:3])
-    neighbourhoods = list(eligible.values("published_revision__city", "published_revision__locality").annotate(room_count=Count("pk")).order_by("-room_count", "published_revision__locality", "published_revision__city")[:4])
+    # Area shortcuts need a real area; listings without one remain in normal city/address search.
+    neighbourhoods = list(eligible.exclude(published_revision__locality="").values("published_revision__city", "published_revision__locality").annotate(room_count=Count("pk")).order_by("-room_count", "published_revision__locality", "published_revision__city")[:4])
     return render(request, "accounts/tenant_home.html", {
         "show_preferences": show_preferences, "onboarding_form": form,
         "page_title": "Tenant Home", "query": query, "area": area, "city": city,

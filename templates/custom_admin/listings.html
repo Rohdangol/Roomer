@@ -1,0 +1,20 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+{% block admin_title %}Listings | Roomer Admin{% endblock %}
+{% block body_class %}roomer-public admin-dashboard-page admin-listings-page{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'accounts/admin_dashboard.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_listings.css' %}"><link rel="stylesheet" href="{% static 'accounts/admin_users.css' %}"><link rel="stylesheet" href="{% static 'accounts/admin_listings.css' %}">{% endblock %}
+{% block content %}
+<section class="admin-container admin-users-content" aria-labelledby="listings-title"><h1 id="listings-title">Listings</h1><p class="admin-users-intro">Monitor room listings across Roomer.</p>
+{% if filtered_owner %}<p>Listings owned by {{ filtered_owner.full_name|default:filtered_owner.email }}. <a href="{% url 'accounts:admin_listings' %}">Show all owners</a></p>{% endif %}
+<nav class="owner-filters" aria-label="Filter listings by availability">{% for value, label in status_filters %}<a href="?status={{ value }}&amp;q={{ query|urlencode }}&amp;owner={{ owner_filter|urlencode }}"{% if status == value %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav>
+<form class="admin-user-search" method="get" action="{% url 'accounts:admin_listings' %}"><input type="hidden" name="status" value="{{ status }}">{{ form.owner }}{{ form.q.label_tag }}{{ form.q }}<button type="submit">Search</button></form>
+{% if form.errors %}<div class="admin-filter-errors" role="alert"><h2>Check the listing filters</h2>{{ form.non_field_errors }}{% for field in form %}{{ field.errors }}{% endfor %}<a href="{% url 'accounts:admin_listings' %}">Clear filters</a></div>{% endif %}
+<p class="owner-listing-count">{{ page_obj.paginator.count }} listing{{ page_obj.paginator.count|pluralize }}</p>
+<div class="admin-listing-grid">{% for listing in page_obj %}{% include 'custom_admin/_listing_card.html' with listing=listing %}{% empty %}<div class="admin-empty"><h2>{% if form.errors %}No results for invalid filters{% elif has_listings %}No listings match your search or filter{% else %}No listings yet{% endif %}</h2><p>{% if has_listings %}Try a different title, location, owner or availability.{% else %}Listings will appear here once created.{% endif %}</p></div>{% endfor %}</div>
+{% if page_obj.paginator.num_pages > 1 %}<nav class="owner-pagination" aria-label="Listings pagination">
+{% if page_obj.has_previous %}<a href="?{{ pagination_query }}&amp;page=1" aria-label="First page">&laquo;</a><a href="?{{ pagination_query }}&amp;page={{ page_obj.previous_page_number }}" aria-label="Previous page">&lsaquo;</a>{% endif %}
+{% for number in page_numbers %}{% if number == page_obj.paginator.ELLIPSIS %}<span>{{ number }}</span>{% else %}<a href="?{{ pagination_query }}&amp;page={{ number }}"{% if number == page_obj.number %} aria-current="page"{% endif %} aria-label="Page {{ number }}">{{ number }}</a>{% endif %}{% endfor %}
+{% if page_obj.has_next %}<a href="?{{ pagination_query }}&amp;page={{ page_obj.next_page_number }}" aria-label="Next page">&rsaquo;</a><a href="?{{ pagination_query }}&amp;page={{ page_obj.paginator.num_pages }}" aria-label="Last page">&raquo;</a>{% endif %}
+</nav>{% endif %}
+</section>
+{% endblock %}

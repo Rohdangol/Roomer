@@ -1,0 +1,34 @@
+{% extends 'accounts/base_role.html' %}
+{% load static %}
+{% block title %}Owner Dashboard | Roomer{% endblock %}
+{% block body_class %}roomer-public owner-home-page{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'accounts/owner_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/rental_workflows.css' %}">{% endblock %}
+{% block content %}
+<div class="owner-home">
+    <section class="owner-hero" aria-labelledby="owner-title">
+        <div class="owner-container">
+            <h1 id="owner-title">Welcome Back Owner,</h1>
+            <p>Manage your properties, rental requests and agreements.</p>
+            <a class="owner-view-all" href="{% url 'accounts:owner_add_listing' %}">Add New Listing</a>
+        </div>
+    </section>
+    <dl class="owner-stats owner-container" aria-label="Property overview">
+        <div><dt>Active Listings<small>Published and available</small></dt><dd>{{ active_listings }}</dd></div>
+        <div><dt>Pending Requests</dt><dd>{{ pending_requests }}</dd></div>
+        <div><dt>Active Rentals</dt><dd>{{ active_rentals }}</dd></div>
+    </dl>
+    <section class="owner-section owner-container" aria-labelledby="requests-title">
+        <div class="owner-heading"><h2 id="requests-title">Recent Requests</h2><a class="owner-view-all" href="{% url 'accounts:owner_requests' %}">View All <span aria-hidden="true">&rarr;</span></a></div>
+        {% for application in recent_requests %}{% include 'accounts/_rental_request_card.html' with owner_view=True %}{% empty %}<div class="owner-empty"><h3>No rental requests yet</h3><p>Requests for your listings will appear here.</p></div>{% endfor %}
+    </section>
+    <section class="owner-section owner-container" aria-labelledby="listings-title">
+        <div class="owner-heading"><h2 id="listings-title">Your Listings</h2><a class="owner-view-all" href="{% url 'accounts:owner_listings' %}">View All <span aria-hidden="true">&rarr;</span></a></div>
+        <p class="owner-section-note">Your three most recently updated listings.</p>
+        <div class="owner-listings">
+            {% for listing in recent_listings %}
+            {% include 'accounts/_owner_listing_card.html' with listing=listing %}
+            {% empty %}<div class="owner-empty"><h3>No listings yet</h3><p>Your properties will appear here after you add a listing.</p></div>{% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

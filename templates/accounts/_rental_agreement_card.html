@@ -1,0 +1,19 @@
+{% with terms=agreement.display_terms|default:agreement.current_terms %}
+{% if role == 'owner' %}
+{% include 'accounts/_owner_agreement_card.html' %}
+{% elif role == 'admin' %}
+{% include 'custom_admin/_agreement_card.html' %}
+{% else %}
+<article class="rental-card rental-agreement-card">
+{% include 'accounts/_agreement_photo.html' %}
+<div class="rental-agreement-content">
+<div><h2>{{ terms.listing_snapshot.title }}</h2><span>{{ agreement.get_status_display }}</span></div>
+<p class="owner-location">{{ terms.listing_snapshot.locality }}{% if terms.listing_snapshot.locality %}, {% endif %}{{ terms.listing_snapshot.city }}</p>
+<p>Agreement #{{ agreement.pk }} · Version {{ terms.version }}</p>
+<p>Tenant: {{ terms.tenant_snapshot.full_name|default:'Name not provided' }} · Owner: {{ terms.owner_snapshot.full_name|default:'Name not provided' }}</p>
+<p class="owner-agreement-rent">Rs {{ terms.monthly_rent }}/month</p>
+<div class="owner-agreement-bottom"><p>{{ terms.start_date }} – {{ terms.end_date }} (exclusive)</p>
+<a href="{% if role == 'admin' %}{% url 'accounts:admin_agreement_details' agreement.pk %}{% elif role == 'owner' %}{% url 'accounts:owner_agreement_details' agreement.pk %}{% else %}{% url 'accounts:agreement_details' agreement.pk %}{% endif %}">View Agreement</a></div>
+</div></article>
+{% endif %}
+{% endwith %}

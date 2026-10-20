@@ -1,0 +1,7 @@
+<div class="listing-field listing-field-{{ field.name }}">
+    {% if field.field.widget.input_type == 'radio' or field.name == 'amenities' %}
+    <fieldset><legend>{{ field.label }}{% if field.field.required %} *{% endif %}</legend>{{ field }}</fieldset>
+    {% else %}<label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span aria-label="required">*</span>{% endif %}</label>{{ field }}{% endif %}
+    {{ field.errors }}
+    {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+</div>

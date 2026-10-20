@@ -1,0 +1,10 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+{% block admin_title %}Notifications | Roomer Admin{% endblock %}
+{% block body_class %}roomer-public admin-dashboard-page admin-notifications-page{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'accounts/admin_dashboard.css' %}"><link rel="stylesheet" href="{% static 'accounts/notifications_page.css' %}">{% endblock %}
+{% block content %}
+<div class="admin-container notifications-page admin-notifications-content">
+    {% include 'core/_notification_page.html' with profile_url_name='accounts:admin_profile' read_all_url_name='accounts:admin_notifications_read_all' read_url_name='accounts:admin_notification_read' notification_title_id='admin-notifications-page-title' %}
+</div>
+{% endblock %}

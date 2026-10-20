@@ -53,11 +53,16 @@ def search_rooms(filters, tenant=None):
     query = filters.get("q")
     if query:
         rooms = rooms.filter(Q(published_revision__city__icontains=query) | Q(published_revision__locality__icontains=query) | Q(published_revision__address__icontains=query))
-    for field in ("area", "city", "room_type", "furnishing"):
+    area = filters.get("area")
+    if area:
+        # Listings without a mapped area remain discoverable by their city/address.
+        rooms = rooms.filter(Q(published_revision__locality=area) | (
+            Q(published_revision__locality="") & (
+                Q(published_revision__city__icontains=area) | Q(published_revision__address__icontains=area))))
+    for field in ("city", "room_type", "furnishing"):
         value = filters.get(field)
         if value:
-            name = "locality" if field == "area" else field
-            rooms = rooms.filter(**{f"published_revision__{name}": value})
+            rooms = rooms.filter(**{f"published_revision__{field}": value})
     if filters.get("max_budget") is not None:
         rooms = rooms.filter(published_revision__monthly_rent__lte=filters["max_budget"])
     # Each selected amenity is required, not merely any one of the selections.

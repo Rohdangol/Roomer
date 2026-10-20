@@ -16,9 +16,10 @@ def public_navigation(request):
         "navigation_verification": submission,
     }
 
-    if request.user.is_active and request.user.role == User.Role.TENANT and not request.user.is_staff:
+    if request.user.is_active and (request.user.is_staff or request.user.role in (User.Role.TENANT, User.Role.OWNER)):
         from notifications.models import Notification
         notifications = Notification.objects.filter(user=request.user).order_by("-created_at", "-pk")
-        context["tenant_notifications"] = notifications
-        context["tenant_unread_count"] = notifications.filter(is_read=False).count()
+        notification_role = "admin" if request.user.is_staff else request.user.role
+        context[f"{notification_role}_notifications"] = notifications
+        context[f"{notification_role}_unread_count"] = notifications.filter(is_read=False).count()
     return context

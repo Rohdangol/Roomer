@@ -1,0 +1,4 @@
+<nav class="{% if owner_view %}owner-filters{% else %}request-tabs{% endif %}" aria-label="Status filters">
+{% for filter in status_filters %}<a href="{{ list_url }}?status={{ filter.value }}&amp;q={{ query|urlencode }}"{% if status == filter.value %} aria-current="page"{% endif %}>{{ filter.label }} ({{ filter.count }})</a>{% endfor %}
+</nav>
+<p>{{ page_obj.paginator.count }} record{{ page_obj.paginator.count|pluralize }}{% if status != 'all' %} with status {{ status }}{% endif %}.</p>

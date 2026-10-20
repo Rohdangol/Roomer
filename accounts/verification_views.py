@@ -43,6 +43,8 @@ def resend_email(request):
         sent_message = "Verification link printed to the runserver terminal (local console delivery); no inbox email was sent." if settings.EMAIL_BACKEND == "django.core.mail.backends.console.EmailBackend" else "Verification link sent. Check your email."
         messages.info(request, {"sent": sent_message, "limited": "Please wait before requesting another email (60 seconds; at most 5 per hour).", "verified": "Your email is already verified."}[result])
     from .permissions import account_destination
+    if request.user.role == "owner" and not request.user.is_staff:
+        return redirect("accounts:owner_profile")
     return redirect("accounts:tenant_profile" if request.user.role == "tenant" and not request.user.is_staff else account_destination(request.user))
 
 
@@ -60,7 +62,7 @@ def tenant_identity_document(request, pk, side):
         stream = document.open("rb")
     except OSError:
         raise Http404
-    response = FileResponse(stream, as_attachment=True, filename=f"identity-{side}{Path(document.name).suffix}", content_type=guess_type(document.name)[0] or "application/octet-stream")
+    response = FileResponse(stream, as_attachment=request.GET.get("preview") != "1", filename=f"identity-{side}{Path(document.name).suffix}", content_type=guess_type(document.name)[0] or "application/octet-stream")
     response["Cache-Control"] = "private, no-store"
     response["X-Content-Type-Options"] = "nosniff"
     return response

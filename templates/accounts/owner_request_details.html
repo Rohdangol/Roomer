@@ -1,0 +1,42 @@
+{% extends 'accounts/base_role.html' %}
+{% load static %}
+{% block title %}Request Details | Roomer{% endblock %}
+{% block body_class %}roomer-public owner-home-page owner-request-details-page{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'accounts/owner_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_request_details.css' %}"><link rel="stylesheet" href="{% static 'accounts/rental_workflows.css' %}">{% endblock %}
+{% block content %}
+<div class="owner-home owner-container owner-request-detail">
+    <a class="request-back" href="{% url 'accounts:owner_requests' %}">&larr; Back to Requests</a>
+    <h1>Rental Request</h1>
+
+    {# Future data blocks must be populated only after request ownership is checked. #}
+    {% block request_metadata %}
+    <dl class="request-metadata"><div><dt>Request ID</dt><dd>{{ application.pk }}</dd></div><div><dt>Requested On</dt><dd>{{ application.requested_at }}</dd></div><div><dt>Request Status</dt><dd>{{ application.get_status_display }}</dd></div></dl>
+    {% endblock %}
+    <section aria-labelledby="requested-room-title"><h2 id="requested-room-title">Requested Room</h2>
+        {% block requested_room %}
+        {% include 'accounts/_rental_request_card.html' %}
+        {% endblock %}
+    </section>
+    <section class="request-timeline-section" aria-labelledby="request-timeline-title"><h2 id="request-timeline-title">Request Status</h2>
+        {% block request_timeline %}
+        <p class="request-muted">{{ application.get_status_display }}{% if application.responded_at %} on {{ application.responded_at }}{% endif %}</p>
+        <ol class="owner-request-timeline" aria-label="Request stages"><li>Request Sent</li><li>Owner Review</li><li>Decision</li></ol>
+        {% endblock %}
+    </section>
+    <div class="owner-request-columns">
+        <section aria-labelledby="request-information-title"><h2 id="request-information-title">Request Details</h2>
+            {% block request_information %}
+            <dl class="request-information"><div><dt>Preferred Move-in Date</dt><dd>{{ application.preferred_move_in }}</dd></div><div><dt>Total Occupancy (including tenant)</dt><dd>{{ application.total_occupancy }}</dd></div></dl>
+            <h3>Message</h3><p class="rental-message">{{ application.message }}</p>
+            {% endblock %}
+        </section>
+        <section class="request-tenant-summary" aria-labelledby="request-tenant-title"><h2 id="request-tenant-title">Tenant Summary</h2>
+            {% block request_tenant %}
+            <div class="request-tenant-content"><div class="request-avatar-placeholder">Photo unavailable</div><div><h3>{{ application.tenant.full_name|default:"Name not provided" }}</h3><p>Tenant</p></div></div>
+            {% endblock %}
+            <button type="button" disabled aria-describedby="tenant-profile-note">View Profile</button><p id="tenant-profile-note" class="request-muted">Tenant profile viewing is not available yet.</p>
+        </section>
+    </div>
+    {% include 'accounts/_rental_request_actions.html' %}
+</div>
+{% endblock %}

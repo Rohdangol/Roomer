@@ -1,0 +1,17 @@
+{% extends 'accounts/base_role.html' %}
+{% load static %}
+{% block title %}Prepare Agreement | Roomer{% endblock %}
+{% block body_class %}roomer-public owner-home-page owner-agreement-details-page{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'accounts/owner_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_request_details.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_agreement_details.css' %}"><link rel="stylesheet" href="{% static 'accounts/rental_workflows.css' %}">{% endblock %}
+{% block content %}
+<div class="owner-home owner-container owner-request-detail owner-agreement-detail">
+<a class="request-back" href="{% url 'accounts:owner_request_details' application.pk %}">Back to Request</a>
+<h1>Prepare Rental Agreement</h1><h2>{{ application.listing_revision.title }}</h2>
+<p>Tenant: {{ application.tenant.full_name|default:'Name not provided' }} · Total occupancy: {{ application.total_occupancy }}</p>
+<p>Saving revised terms requires a new send and fresh Tenant confirmation. Payment due day is informational only. End date is exclusive.</p>
+<form class="rental-form" method="post" action="{% url 'accounts:owner_agreement_prepare' application.pk %}">
+{% csrf_token %}<input type="hidden" name="terms_id" value="{{ expected_terms_id }}">{{ form.non_field_errors }}
+{% for field in form %}<div class="rental-field">{{ field.label_tag }}{{ field }}{{ field.errors }}</div>{% endfor %}
+<button type="submit">Save Agreement Terms</button> <a href="{% url 'accounts:owner_request_details' application.pk %}">Cancel</a>
+</form></div>
+{% endblock %}

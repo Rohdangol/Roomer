@@ -1,0 +1,14 @@
+{% extends 'accounts/base_role.html' %}
+{% load static %}
+{% block title %}Rental Requests | Roomer{% endblock %}
+{% block body_class %}roomer-public owner-home-page owner-requests-page{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'accounts/owner_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_listings.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_requests.css' %}"><link rel="stylesheet" href="{% static 'accounts/rental_workflows.css' %}">{% endblock %}
+{% block content %}
+<section class="owner-home owner-container owner-listings-content" aria-labelledby="requests-title">
+<h1 id="requests-title">Rental Requests</h1><p class="requests-intro">Review and manage rental requests for your listings.</p>
+{% include 'accounts/_rental_filters.html' %}
+{% for application in page_obj %}{% include 'accounts/_rental_request_card.html' %}
+{% empty %}<div class="request-empty owner-empty"><h2>No {% if status != 'all' %}{{ status }} {% endif %}requests</h2><p>{% if status == 'all' %}Rental requests will appear here when submitted.{% else %}No requests match this status.{% endif %}</p></div>{% endfor %}
+{% include 'accounts/_rental_pagination.html' %}
+</section>
+{% endblock %}

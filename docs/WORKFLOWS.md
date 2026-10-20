@@ -1,5 +1,10 @@
 # Roomer shared workflows
 
+**Rental implementation update:** the later authorized request/agreement rules,
+implemented services, statuses, permissions and scheduler setup are documented in
+[RENTAL_WORKFLOWS.md](RENTAL_WORKFLOWS.md). That document supersedes the deferred
+rental sections below, including optional-message and unresolved-lifecycle notes.
+
 Read with DATA_MODEL.md. Confirmed requirements come from the supplied specification/ER/wireframes and the user's later decisions. The latest instruction authorizes the first-phase listings/preferences/notifications implementation; verification-history and rental/calculation sections remain future contracts.
 
 ## Phase one and role boundaries

@@ -1,0 +1,12 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+{% block admin_title %}Agreements | Roomer Admin{% endblock %}
+{% block body_class %}roomer-public admin-dashboard-page admin-agreements-page{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'accounts/admin_dashboard.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_listings.css' %}"><link rel="stylesheet" href="{% static 'accounts/admin_users.css' %}"><link rel="stylesheet" href="{% static 'accounts/admin_agreements.css' %}"><link rel="stylesheet" href="{% static 'accounts/rental_workflows.css' %}">{% endblock %}
+{% block content %}
+<section class="admin-container admin-users-content" aria-labelledby="agreements-title"><h1 id="agreements-title">Agreements</h1><p class="requests-intro">View and review rental agreements.</p>
+{% include 'accounts/_rental_filters.html' %}
+<form class="admin-user-search" method="get"><input type="hidden" name="status" value="{{ status }}"><label for="agreement-query">Search by agreement ID, Tenant or Owner</label><input id="agreement-query" type="search" name="q" value="{{ query }}" maxlength="150"><button type="submit">Search</button></form>
+{% for agreement in page_obj %}{% include 'accounts/_rental_agreement_card.html' %}{% empty %}<div class="request-empty owner-empty admin-empty"><h2>No {% if status != 'all' %}{{ status }} {% endif %}agreements</h2><p>{% if status == 'all' %}Agreements will appear here when prepared and sent.{% else %}No agreements match these filters.{% endif %}</p></div>{% endfor %}
+{% include 'accounts/_rental_pagination.html' %}
+</section>{% endblock %}

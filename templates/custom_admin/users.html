@@ -1,0 +1,19 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+{% block admin_title %}Users | Roomer Admin{% endblock %}
+{% block body_class %}roomer-public admin-dashboard-page admin-users-page{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'accounts/admin_dashboard.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_listings.css' %}"><link rel="stylesheet" href="{% static 'accounts/admin_users.css' %}">{% endblock %}
+{% block content %}
+<section class="admin-container admin-users-content" aria-labelledby="users-title">
+    <h1 id="users-title">Users</h1><p class="admin-users-intro">View tenants, owners, verification and account status.</p>
+    <nav class="owner-filters admin-user-filters" aria-label="Filter users by role">{% for value, label in role_filters %}<a href="?role={{ value }}&amp;q={{ query|urlencode }}"{% if role == value %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav>
+    <form class="admin-user-search" method="get" action="{% url 'accounts:admin_users' %}"><input type="hidden" name="role" value="{{ role }}"><label for="user-query">Search by name or email</label><input id="user-query" name="q" type="search" value="{{ query }}" maxlength="254" placeholder="Search by name or email"><button type="submit">Search</button></form>
+    <p class="owner-listing-count">{{ page_obj.paginator.count }} user{{ page_obj.paginator.count|pluralize }}</p>
+    <div class="admin-user-list">{% for person in page_obj %}{% include 'custom_admin/_user_card.html' with person=person %}{% empty %}<div class="admin-empty"><h2>{% if has_users %}No users match your search or filter{% else %}No Tenant or Owner accounts yet{% endif %}</h2><p>{% if has_users %}Try a different name, email or role.{% else %}Accounts will appear here when registered.{% endif %}</p>{% if has_users %}<a href="{% url 'accounts:admin_users' %}">Clear search and filters</a>{% endif %}</div>{% endfor %}</div>
+    {% if page_obj.paginator.num_pages > 1 %}<nav class="owner-pagination" aria-label="Users pagination">
+        {% if page_obj.has_previous %}<a href="?{{ pagination_query }}&amp;page=1" aria-label="First page">&laquo;</a><a href="?{{ pagination_query }}&amp;page={{ page_obj.previous_page_number }}" aria-label="Previous page">&lsaquo;</a>{% endif %}
+        {% for number in page_numbers %}{% if number == page_obj.paginator.ELLIPSIS %}<span>{{ number }}</span>{% else %}<a href="?{{ pagination_query }}&amp;page={{ number }}"{% if number == page_obj.number %} aria-current="page"{% endif %} aria-label="Page {{ number }}">{{ number }}</a>{% endif %}{% endfor %}
+        {% if page_obj.has_next %}<a href="?{{ pagination_query }}&amp;page={{ page_obj.next_page_number }}" aria-label="Next page">&rsaquo;</a><a href="?{{ pagination_query }}&amp;page={{ page_obj.paginator.num_pages }}" aria-label="Last page">&raquo;</a>{% endif %}
+    </nav>{% endif %}
+</section>
+{% endblock %}

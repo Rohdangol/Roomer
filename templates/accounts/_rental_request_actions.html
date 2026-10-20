@@ -1,0 +1,11 @@
+{% if application.status == 'pending' %}
+<div class="request-decision-actions rental-actions">
+{% if owner_view %}
+<form method="post" action="{% url 'accounts:owner_request_reject' application.pk %}">{% csrf_token %}<label><input type="checkbox" name="confirm" required> Confirm rejection</label><button type="submit">Reject Request</button></form>
+<form method="post" action="{% url 'accounts:owner_request_accept' application.pk %}">{% csrf_token %}<label><input type="checkbox" name="confirm" required> Confirm acceptance</label><button type="submit">Accept Request</button></form>
+{% else %}
+<form method="post" action="{% url 'accounts:request_cancel' application.pk %}">{% csrf_token %}<label><input type="checkbox" name="confirm" required> Confirm cancellation</label><button type="submit">Cancel Request</button></form>
+{% endif %}
+</div>
+{% endif %}
+{% if application.status == 'accepted' and owner_view %}<p><a href="{% url 'accounts:owner_agreement_prepare' application.pk %}">Prepare / View Agreement</a></p>{% endif %}

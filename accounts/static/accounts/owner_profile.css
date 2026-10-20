@@ -1,0 +1,24 @@
+.owner-profile-page .profile-picture { min-width:0; }
+.owner-profile-page .profile-picture form { max-width:100%; }
+.owner-profile-page .profile-picture input { max-width:100%; }
+.owner-profile-overview { margin-top:72px; }
+.owner-profile-page .owner-stats { margin:0; width:100%; }
+.owner-profile-page .owner-stats dt { color:var(--color-surface); margin:0; }
+.owner-profile-page .owner-stats dd { color:var(--color-surface); font-size:44px; }
+.owner-profile-page .verification-row { grid-template-columns:28px minmax(0,1fr) auto; align-items:center; }
+.owner-profile-page .verification-row + .verification-row { margin-top:20px; }
+.owner-profile-page .owner-verification-content { min-width:0; overflow-wrap:anywhere; word-break:normal; }
+.owner-profile-page .verification-status { justify-self:end; }
+.owner-profile-page .owner-verification-actions { display:flex; flex-direction:column; align-items:flex-end; max-width:260px; text-align:right; }
+.owner-profile-page .owner-verification-actions form { max-width:100%; }
+.owner-profile-page .verification-row a { display:inline-block; margin-top:12px; }
+.owner-profile-page .verification-row button { margin-top:12px; }
+.owner-profile-page .account-actions button { width:100%; }
+@media(max-width:540px) { .owner-profile-overview { margin-top:44px; } }
+@media(max-width:650px) {
+    .owner-profile-page .verification-row { grid-template-columns:28px minmax(0,1fr); align-items:start; }
+    .owner-profile-page .verification-status { grid-column:2; justify-self:start; white-space:normal; }
+    .owner-profile-page .owner-verification-actions { grid-column:2; align-items:flex-start; max-width:100%; text-align:left; }
+}
+.owner-profile-page .owner-password-link { display:block; padding:12px 24px; border:1px solid var(--color-primary); border-radius:999px; background:var(--color-primary); color:var(--color-surface); font-weight:600; text-align:center; text-decoration:none; }
+.owner-profile-page .owner-password-link:hover { background:var(--color-primary-hover); }

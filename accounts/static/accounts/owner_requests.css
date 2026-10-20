@@ -1,0 +1,5 @@
+.owner-requests-page .owner-filters > span { text-align:center; padding:10px 16px; border:1px solid var(--color-border); border-radius:999px; color:var(--color-text-muted); cursor:not-allowed; }
+.owner-request-note { margin:12px 0 0; font-size:13px; color:var(--color-text-muted); }
+.owner-requests-page .owner-empty h2 { margin:0 0 12px; font-size:28px; }
+.owner-requests-page .owner-empty .owner-view-all { margin-top:24px; }
+@media(max-width:540px) { .owner-requests-page .owner-empty h2 { font-size:24px; } }

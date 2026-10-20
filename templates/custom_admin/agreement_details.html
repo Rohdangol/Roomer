@@ -1,0 +1,38 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+{% block admin_title %}Agreement Details | Roomer{% endblock %}
+{% block body_class %}roomer-public admin-dashboard-page admin-agreement-details-page{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'accounts/admin_dashboard.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_request_details.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_agreement_details.css' %}"><link rel="stylesheet" href="{% static 'accounts/admin_agreement_details.css' %}"><link rel="stylesheet" href="{% static 'accounts/rental_workflows.css' %}">{% endblock %}
+{% block content %}
+<div class="owner-home owner-container owner-request-detail owner-agreement-detail">
+    <a class="request-back" href="{% url 'accounts:admin_agreements' %}">&larr; Back to Agreements</a>
+    <h1>Rental Agreement</h1>
+    {% block agreement_availability %}{% endblock %}
+    {# Future blocks require agreement-view permission, a real agreement lookup and authorized participant/snapshot data. #}
+    {% block agreement_metadata %}{% include 'accounts/_agreement_metadata.html' %}{% endblock %}
+    <section aria-labelledby="agreement-room-title"><h2 id="agreement-room-title">Property</h2>
+        {% block agreement_room %}{% include 'accounts/_agreement_room.html' %}{% endblock %}
+    </section>
+    <section class="agreement-detail-section" aria-labelledby="agreement-terms-title"><h2 id="agreement-terms-title">Agreement Terms</h2>
+        {# Rent, deposit, occupancy, dates, due day and rules must use stored agreed values. #}
+        {# Never bind agreement terms to the listing's mutable current revision. #}
+        {% block agreement_terms %}{% include 'accounts/_agreement_terms.html' %}{% endblock %}
+    </section>
+    <div class="owner-request-columns agreement-participant-columns">
+        <section aria-labelledby="agreement-tenant-title"><h2 id="agreement-tenant-title">Tenant</h2>{% block agreement_tenant %}{% include 'accounts/_agreement_party.html' with party=terms.tenant_snapshot %}{% endblock %}</section>
+        <section aria-labelledby="agreement-owner-title"><h2 id="agreement-owner-title">Owner</h2>{% block agreement_owner %}{% include 'accounts/_agreement_party.html' with party=terms.owner_snapshot %}{% endblock %}</section>
+    </div>
+    <div class="owner-request-columns">
+        <section aria-labelledby="agreement-rules-title"><h2 id="agreement-rules-title">House Rules</h2>
+            {% block agreement_house_rules %}{% include 'accounts/_agreement_rules.html' %}{% endblock %}
+        </section>
+        <section aria-labelledby="agreement-additional-title"><h2 id="agreement-additional-title">Additional Terms &amp; Conditions</h2>
+            {% block agreement_additional_terms %}<div class="rental-message">{{ terms.additional_terms }}</div>{% endblock %}
+        </section>
+    </div>
+    <section class="agreement-detail-section" aria-labelledby="agreement-confirmation-title"><h2 id="agreement-confirmation-title">Agreement Confirmation</h2>
+        {% block agreement_confirmation %}{% include 'accounts/_agreement_confirmations.html' %}{% endblock %}
+    </section>
+    {% block agreement_finalization %}<section class="agreement-review-section" aria-labelledby="finalization-title"><h2 id="finalization-title">Finalization Summary</h2><p>Owner finalization: {{ terms.owner_accepted_at|default:'Not finalized' }}.</p>{% include 'accounts/_agreement_actions.html' %}</section>{% endblock %}
+</div>
+{% endblock %}

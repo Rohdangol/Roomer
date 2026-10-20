@@ -1,4 +1,4 @@
 <a href="{% if navigation_destination == 'accounts:verification' %}{% url 'accounts:verification' %}{% else %}{% url 'accounts:owner' %}{% endif %}"{% if request.resolver_match.view_name == 'home' or request.resolver_match.view_name == 'accounts:owner' or request.resolver_match.view_name == 'accounts:verification' %} aria-current="page"{% endif %}>Home</a>
-<span class="disabled-item" aria-disabled="true" title="Not available yet">My Listings</span>
-<span class="disabled-item" aria-disabled="true" title="Not available yet">Requests</span>
-<span class="disabled-item" aria-disabled="true" title="Not available yet">Agreements</span>
+<a href="{% url 'accounts:owner_listings' %}"{% if request.resolver_match.view_name == 'accounts:owner_listings' or request.resolver_match.view_name == 'accounts:owner_add_listing' or request.resolver_match.view_name == 'accounts:owner_listing_details' or request.resolver_match.view_name == 'accounts:owner_edit_listing' %} aria-current="page"{% endif %}>My Listings</a>
+<a href="{% url 'accounts:owner_requests' %}"{% if request.resolver_match.view_name == 'accounts:owner_requests' or request.resolver_match.view_name == 'accounts:owner_request_details_layout' %} aria-current="page"{% endif %}>Requests</a>
+<a href="{% url 'accounts:owner_agreements' %}"{% if request.resolver_match.view_name == 'accounts:owner_agreements' or request.resolver_match.view_name == 'accounts:owner_agreement_details_layout' %} aria-current="page"{% endif %}>Agreements</a>

@@ -1,0 +1,5 @@
+<div class="owner-agreement-photo request-photo-placeholder">
+{% if not user.is_staff or perms.listings.view_roomimage %}
+{% with photo=terms.listing_revision.photos.all|first %}{% if photo %}<img src="{% url 'accounts:rental_photo' 'agreement' agreement.pk photo.pk %}" alt="{{ terms.listing_snapshot.title }}" loading="lazy">{% else %}<span>No room photo</span>{% endif %}{% endwith %}
+{% else %}<span>Photo permission required</span>{% endif %}
+</div>
