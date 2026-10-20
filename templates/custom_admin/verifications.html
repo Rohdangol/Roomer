@@ -1,0 +1,15 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+{% block admin_title %}Identity Verifications | Roomer Admin{% endblock %}
+{% block body_class %}roomer-public admin-dashboard-page{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'accounts/admin_dashboard.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_listings.css' %}"><link rel="stylesheet" href="{% static 'accounts/admin_users.css' %}"><link rel="stylesheet" href="{% static 'accounts/admin_verifications.css' %}">{% endblock %}
+{% block content %}
+<section class="admin-container admin-users-content"><a href="{% url 'accounts:admin' %}">&larr; Back to Admin Dashboard</a><h1>Identity Verifications</h1><p>Review identity submissions visible within your permissions. Email verification is separate.</p>
+<nav class="owner-filters" aria-label="Verification status">{% for value, label in status_filters %}<a href="?status={{ value }}&amp;role={{ role|urlencode }}&amp;q={{ query|urlencode }}"{% if status == value %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav>
+<form class="verification-search" method="get"><input type="hidden" name="status" value="{{ status }}"><div>{{ form.q.label_tag }}{{ form.q }}</div><div>{{ form.role.label_tag }}{{ form.role }}</div><button type="submit">Search</button></form>
+{% if form.errors %}<div role="alert">{{ form.errors }}</div>{% endif %}
+<p class="owner-listing-count">{{ page_obj.paginator.count }} submission{{ page_obj.paginator.count|pluralize }}</p>
+<div class="admin-verifications">{% for row in page_obj %}<article class="admin-verification"><div class="admin-person"><div><h2>{{ row.user__full_name|default:'Name not provided' }}</h2><p>{{ row.user__email }}</p></div><span class="admin-role">{{ row.applicant_role|title }}</span><span>{{ row.status_label }}</span></div><div class="admin-verification-bottom"><div><span>Submitted on</span><time datetime="{{ row.submitted_at|date:'c' }}">{{ row.submitted_at|date:'M j, Y, g:i A' }}</time></div><a class="admin-pill" href="{{ row.review_url }}">Review</a></div></article>{% empty %}<div class="admin-empty"><h2>No matching identity submissions</h2><p>Try another status, role, name or email. Only permitted submissions are shown.</p><a href="{% url 'accounts:admin_verifications' %}">Clear filters</a></div>{% endfor %}</div>
+{% if page_obj.paginator.num_pages > 1 %}<nav class="owner-pagination" aria-label="Verification pagination">{% if page_obj.has_previous %}<a href="?{{ pagination_query }}&amp;page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}{% for number in page_numbers %}{% if number == page_obj.paginator.ELLIPSIS %}<span>{{ number }}</span>{% else %}<a href="?{{ pagination_query }}&amp;page={{ number }}"{% if number == page_obj.number %} aria-current="page"{% endif %} aria-label="Page {{ number }}">{{ number }}</a>{% endif %}{% endfor %}{% if page_obj.has_next %}<a href="?{{ pagination_query }}&amp;page={{ page_obj.next_page_number }}">Next</a>{% endif %}</nav>{% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'accounts/base_role.html' %}
+{% load static %}
+{% block title %}My Listings | Roomer{% endblock %}
+{% block body_class %}roomer-public owner-home-page owner-listings-page{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'accounts/owner_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_listings.css' %}">{% endblock %}
+{% block content %}
+<div class="owner-home owner-container owner-listings-content">
+    <div class="owner-heading">
+        <div><h1>My Listings</h1><p>Manage your room listings and their availability.</p></div>
+        <div class="owner-add-action"><a class="owner-view-all" href="{% url 'accounts:owner_add_listing' %}">Add New Listing</a></div>
+    </div>
+    <nav class="owner-filters" aria-label="Filter listings by status">
+        {% for value, label in status_filters %}<a href="?status={{ value }}"{% if status == value %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}
+    </nav>
+    <p class="owner-listing-count">{{ page_obj.paginator.count }} listing{{ page_obj.paginator.count|pluralize }}</p>
+    <div class="owner-listings">
+        {% for listing in page_obj %}
+            {% include 'accounts/_owner_listing_card.html' with listing=listing %}
+        {% empty %}
+            <div class="owner-empty">
+                {% if has_listings %}<h2>No {{ status }} listings</h2><p>None of your listings match this filter. <a href="{% url 'accounts:owner_listings' %}">View all listings</a>.</p>
+                {% else %}<h2>No listings yet</h2><p>Your properties will appear here after you add a listing.</p>{% endif %}
+            </div>
+        {% endfor %}
+    </div>
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="owner-pagination" aria-label="Listings pagination">
+        {% if page_obj.has_previous %}<a href="?status={{ status }}&amp;page=1" aria-label="First page">&laquo;</a><a href="?status={{ status }}&amp;page={{ page_obj.previous_page_number }}" aria-label="Previous page">&lsaquo;</a>{% endif %}
+        {% for number in page_numbers %}
+            {% if number == page_obj.paginator.ELLIPSIS %}<span>{{ number }}</span>{% else %}<a href="?status={{ status }}&amp;page={{ number }}"{% if number == page_obj.number %} aria-current="page"{% endif %} aria-label="Page {{ number }}">{{ number }}</a>{% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}<a href="?status={{ status }}&amp;page={{ page_obj.next_page_number }}" aria-label="Next page">&rsaquo;</a><a href="?status={{ status }}&amp;page={{ page_obj.paginator.num_pages }}" aria-label="Last page">&raquo;</a>{% endif %}
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

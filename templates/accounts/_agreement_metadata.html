@@ -1,0 +1,4 @@
+<dl class="request-metadata rental-metadata"><div><dt>Agreement ID</dt><dd>{{ agreement.pk }}</dd></div><div><dt>Status</dt><dd>{{ agreement.get_status_display }}</dd></div><div><dt>Terms Version</dt><dd>{{ terms.version }}</dd></div><div><dt>Created On</dt><dd>{{ agreement.created_at }}</dd></div></dl>
+{% if not current_version %}<p>This is an earlier sent version. <a href="{{ detail_url }}">View latest available terms</a>.</p>{% endif %}
+{% if agreement.status == 'scheduled' %}<p>The listing is reserved. Occupancy begins on {{ terms.start_date }}.</p>{% endif %}
+{% if agreement.status == 'active' %}<p>Occupied until completion confirms the room has been vacated. End date: {{ terms.end_date }} (exclusive).</p>{% endif %}

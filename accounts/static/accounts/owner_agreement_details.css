@@ -1,0 +1,14 @@
+.agreement-detail-section { margin-top:56px; }
+.agreement-term-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:30px; margin:28px 0 0; }
+.agreement-term-grid dt { margin-bottom:10px; }
+.agreement-term-grid dd { margin:0; font-weight:600; color:var(--color-text-muted); }
+.agreement-participant-columns { margin-top:48px; }
+.agreement-participant-columns .request-tenant-summary { height:calc(100% - 54px); }
+.agreement-rule-list { margin:0; }
+.agreement-rule-list > div { display:flex; flex-wrap:wrap; gap:6px 16px; margin-bottom:10px; }
+.agreement-rule-list dd { margin:0; color:var(--color-text-muted); }
+.owner-agreement-detail textarea { width:100%; resize:vertical; padding:16px; margin-top:12px; border:1px solid var(--color-border); border-radius:12px; }
+.agreement-review-section { margin-top:64px; }
+.owner-home .agreement-review-section button { width:100%; padding:18px 24px; font-size:16px; }
+@media(max-width:800px) { .agreement-term-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .agreement-participant-columns .request-tenant-summary { height:auto; } }
+@media(max-width:540px) { .agreement-term-grid { grid-template-columns:minmax(0,1fr); gap:20px; } .agreement-detail-section, .agreement-review-section { margin-top:40px; } }

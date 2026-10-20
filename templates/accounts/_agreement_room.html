@@ -1,0 +1,6 @@
+<article class="requested-room owner-listing rental-card">
+{% if not document_download %}{% include 'accounts/_agreement_photo.html' %}{% endif %}
+<div class="requested-room-content">
+<div class="owner-price"><strong>Rs {{ terms.monthly_rent }}/month</strong><span>{{ terms.listing_snapshot.room_type_label }}</span></div>
+<h3>{{ terms.listing_snapshot.title }}</h3><p class="owner-location">{{ terms.listing_snapshot.locality }}{% if terms.listing_snapshot.locality %}, {% endif %}{{ terms.listing_snapshot.city }}</p><p>{{ terms.listing_snapshot.address }}</p>
+</div></article>

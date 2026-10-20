@@ -1,0 +1,33 @@
+.owner-request-detail { padding-top:28px; }
+.request-back { display:inline-block; margin-bottom:20px; text-decoration:none; }
+.owner-request-detail h1 { margin:0 0 28px; font-size:40px; }
+.owner-request-detail h2 { font-size:30px; margin:0 0 18px; }
+.owner-request-detail h3 { font-size:20px; margin:0 0 12px; }
+.request-unavailable { padding:20px 24px; border:1px dashed var(--color-border); border-radius:20px; margin-bottom:36px; }
+.request-unavailable h2 { font-size:22px; margin-bottom:8px; }
+.request-unavailable p { margin:0; }
+.request-metadata { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:28px; margin:0 0 48px; }
+.request-metadata dt, .request-information dt { margin-bottom:8px; }
+.request-metadata dd, .request-information dd { margin:0; font-weight:600; color:var(--color-text-muted); }
+.requested-room { display:grid; grid-template-columns:1fr 1fr; }
+.request-photo-placeholder { min-height:290px; display:grid; place-items:center; background:color-mix(in srgb, var(--color-primary) 6%, var(--color-surface)); color:var(--color-text-muted); }
+.requested-room-content { display:flex; flex-direction:column; gap:16px; padding:24px; }
+.requested-room-content h3, .requested-room-content p { margin:0; }
+.requested-room-content button { margin-top:auto; width:100%; }
+.request-muted { color:var(--color-text-muted); font-size:13px; }
+.request-timeline-section { margin-top:64px; }
+.owner-request-timeline { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); padding:0; list-style:none; margin:32px 0 0; color:var(--color-text-muted); }
+/* Every marker is neutral: no completed or current stage is claimed. */
+.owner-request-timeline li { position:relative; text-align:center; padding-top:34px; border-top:2px solid var(--color-border); font-family:var(--font-heading); font-size:22px; }
+.owner-request-timeline li::before { content:""; position:absolute; top:-10px; left:calc(50% - 9px); width:18px; height:18px; border:2px solid var(--color-border); border-radius:50%; background:var(--color-surface); }
+.owner-request-columns { display:grid; grid-template-columns:1fr 1fr; gap:36px; margin-top:64px; }
+.request-information { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin:28px 0; }
+.request-tenant-summary { border:1px solid var(--color-border); border-radius:28px; padding:28px; }
+.request-tenant-content { display:flex; align-items:flex-start; gap:20px; margin-bottom:24px; }
+.request-avatar-placeholder { flex:0 0 110px; min-height:110px; display:grid; place-items:center; text-align:center; border-radius:16px; background:color-mix(in srgb, var(--color-primary) 6%, var(--color-surface)); color:var(--color-text-muted); font-size:12px; padding:10px; }
+.request-tenant-content p { margin:4px 0; }
+.request-tenant-summary button { width:100%; }
+.request-decision-actions { display:grid; grid-template-columns:1fr 1fr; gap:28px; margin-top:72px; }
+.owner-home .request-decision-actions button { padding:16px 24px; font-size:17px; }
+@media(max-width:800px) { .owner-request-columns { grid-template-columns:minmax(0,1fr); } .request-tenant-content { flex-wrap:wrap; } }
+@media(max-width:600px) { .requested-room { grid-template-columns:minmax(0,1fr); } .request-metadata, .request-information { grid-template-columns:minmax(0,1fr); gap:18px; } .request-decision-actions { grid-template-columns:minmax(0,1fr); gap:14px; margin-top:40px; } .owner-request-detail h1 { font-size:32px; } .owner-request-detail h2 { font-size:26px; } .owner-request-timeline li { font-size:16px; padding:24px 4px 0; } .request-timeline-section, .owner-request-columns { margin-top:44px; } }

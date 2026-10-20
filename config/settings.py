@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "preferences.apps.PreferencesConfig",
     "notifications.apps.NotificationsConfig",
     "saved_rooms.apps.SavedRoomsConfig",
+    "rentals.apps.RentalsConfig",
 ]
 
 AUTH_USER_MODEL = "accounts.User"
@@ -129,7 +130,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kathmandu'
 
 USE_I18N = True
 

@@ -1,0 +1,17 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+{% block admin_title %}Admin Profile | Roomer{% endblock %}
+{% block body_class %}roomer-public admin-dashboard-page admin-profile-page{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'accounts/admin_dashboard.css' %}"><link rel="stylesheet" href="{% static 'accounts/tenant_profile.css' %}"><link rel="stylesheet" href="{% static 'accounts/admin_profile.css' %}">{% endblock %}
+{% block content %}
+<div class="profile-page">
+<a class="profile-back" href="{% url 'accounts:admin' %}">&larr; Back to Admin Dashboard</a>
+<h1>Admin Profile</h1><p class="profile-intro">Manage your personal information and account settings.</p>
+<section class="personal-panel" aria-labelledby="personal-title"><div class="profile-picture">{% if user.profile_picture %}<img class="uploaded-profile-picture" src="{% url 'accounts:admin_profile_picture' %}" width="220" height="220" alt="Your profile picture">{% else %}<img src="{% static 'accounts/images/profile.png' %}" width="80" height="80" alt=""><p>No profile picture added</p>{% endif %}<details class="profile-editor"{% if edit_picture %} open{% endif %}><summary>{% if user.profile_picture %}Change{% else %}Add{% endif %} Picture</summary><form method="post" enctype="multipart/form-data" action="{% url 'accounts:admin_profile' %}">{% csrf_token %}<input type="hidden" name="action" value="picture">{{ picture_form.non_field_errors }}<div class="profile-field">{{ picture_form.profile_picture.label_tag }}{{ picture_form.profile_picture }}<p class="help-text">{{ picture_form.profile_picture.help_text }}</p>{{ picture_form.profile_picture.errors }}</div><button type="submit">Save Picture</button></form></details></div><div class="personal-content"><div class="admin-profile-heading"><h2 id="personal-title">Admin Details</h2><span class="admin-role">{{ user.is_active|yesno:'Active,Inactive' }}</span></div><dl class="personal-facts"><div><dt>Full Name</dt><dd>{{ user.full_name|default:'Not provided' }}</dd></div><div><dt>Phone Number</dt><dd>{{ user.phone_number|default:'Not provided' }}</dd></div><div><dt>Current Location</dt><dd>Not provided</dd></div><div><dt>Date of Birth</dt><dd>Not provided</dd></div><div><dt>Email</dt><dd>{{ user.email }}</dd></div></dl>
+{# Native details controls keep editing usable without JavaScript. #}
+<details class="profile-editor"{% if edit_information %} open{% endif %}><summary>Edit Information</summary><form method="post" action="{% url 'accounts:admin_profile' %}">{% csrf_token %}<input type="hidden" name="action" value="information">{{ information_form.non_field_errors }}{% for field in information_form %}<div class="profile-field">{{ field.label_tag }}{{ field }}{% if field.help_text %}<p class="help-text">{{ field.help_text }}</p>{% endif %}{{ field.errors }}</div>{% endfor %}<p class="help-text">Email is read-only. Date of birth and current location are not stored.</p><button type="submit">Save Information</button></form></details></div></section>
+
+
+<section class="profile-account" aria-labelledby="account-title"><h2 id="account-title">Account</h2><div class="account-actions"><a class="admin-password-link" href="{% url 'admin:password_change' %}">Change Password</a><form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button type="submit">Log Out</button></form></div></section>
+</div>
+{% endblock %}

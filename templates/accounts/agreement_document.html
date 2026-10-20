@@ -1,0 +1,10 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Rental Agreement #{{ agreement.pk }}</title></head><body>
+<h1>Rental Agreement #{{ agreement.pk }}</h1><p>{{ agreement.get_status_display }} · Version {{ terms.version }}</p>
+<h2>Room</h2>{% include 'accounts/_agreement_room.html' %}
+<h2>Agreement Terms</h2>{% include 'accounts/_agreement_terms.html' %}
+<h2>Tenant</h2>{% include 'accounts/_agreement_party.html' with party=terms.tenant_snapshot %}
+<h2>Owner</h2>{% include 'accounts/_agreement_party.html' with party=terms.owner_snapshot %}
+<h2>House Rules</h2>{% include 'accounts/_agreement_rules.html' %}
+<h2>Additional Terms &amp; Conditions</h2>{{ terms.additional_terms|linebreaks }}
+<h2>Agreement Confirmation</h2>{% include 'accounts/_agreement_confirmations.html' %}
+</body></html>

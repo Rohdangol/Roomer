@@ -1,0 +1,11 @@
+{# Requires agreement model view permission before rendering participant snapshots. #}
+<article class="admin-agreement-card rental-card">
+    {% include 'accounts/_agreement_photo.html' %}
+    <div class="admin-agreement-summary">
+        <div class="admin-agreement-heading"><h3>Agreement #{{ agreement.pk }}</h3><span>{{ agreement.get_status_display }}</span></div>
+        <div><p>Property</p><h3>{{ terms.listing_snapshot.title }}</h3><p>{{ terms.listing_snapshot.locality }}{% if terms.listing_snapshot.locality %}, {% endif %}{{ terms.listing_snapshot.city }}</p></div>
+        <dl class="admin-agreement-parties"><div><dt>Tenant</dt><dd>{{ terms.tenant_snapshot.full_name|default:'Name not provided' }}</dd></div><div><dt>Owner</dt><dd>{{ terms.owner_snapshot.full_name|default:'Name not provided' }}</dd></div></dl>
+        <dl><dt>Duration</dt><dd>{{ terms.start_date }} &ndash; {{ terms.end_date }} (exclusive)</dd></dl><p>Rs {{ terms.monthly_rent }}/month ? Version {{ terms.version }}</p>
+        <a href="{% url 'accounts:admin_agreement_details' agreement.pk %}">View Agreement</a>
+    </div>
+</article>

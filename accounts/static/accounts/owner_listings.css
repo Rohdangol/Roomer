@@ -1,0 +1,14 @@
+﻿.owner-listings-content { padding-top:44px; }
+.owner-listings-content h1 { margin:0 0 8px; font-size:36px; }
+.owner-listings-content .owner-heading p { margin:0; }
+.owner-add-action { text-align:right; }
+.owner-add-action small { display:block; margin-top:6px; font-size:11px; color:var(--color-text-muted); }
+.owner-filters { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+.owner-filters a { text-align:center; padding:10px 16px; border:1px solid var(--color-border); border-radius:999px; text-decoration:none; }
+.owner-filters a[aria-current="page"], .owner-pagination a[aria-current="page"] { background:var(--color-primary); color:var(--color-surface); border-color:var(--color-primary); }
+.owner-listing-count { text-align:right; margin:6px 0 48px; color:var(--color-text-muted); font-size:14px; }
+.owner-home .owner-manage { margin-top:auto; width:100%; }
+.owner-listings-content .owner-revision { margin-bottom:16px; }
+.owner-pagination { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:10px; margin-top:44px; }
+.owner-pagination a { display:grid; place-items:center; min-width:42px; min-height:42px; padding:6px; border:1px solid var(--color-border); border-radius:999px; text-decoration:none; }
+@media(max-width:540px) { .owner-listings-content { padding-top:28px; } .owner-listings-content .owner-heading { flex-direction:column; align-items:flex-start; } .owner-add-action { text-align:left; } .owner-filters { grid-template-columns:repeat(2,minmax(0,1fr)); } .owner-listing-count { margin-bottom:28px; } }

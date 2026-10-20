@@ -1,5 +1,5 @@
 {% load static %}
 <section><img class="footer-logo" src="{% static 'accounts/images/Logo.png' %}" alt="Roomer"><p>Manage and oversee the Roomer platform.</p></section>
-<section><h2>Management</h2>{% if perms.accounts.view_user or perms.accounts.change_user %}<a href="{% url 'admin:accounts_user_changelist' %}">Users</a>{% else %}<span class="disabled-item" aria-disabled="true">Users</span>{% endif %}{% if perms.listings.view_roomlisting or perms.listings.change_roomlisting %}<a href="{% url 'admin:listings_roomlisting_changelist' %}">Listing</a>{% else %}<span class="disabled-item" aria-disabled="true">Listing</span>{% endif %}</section>
-<section><h2>Rentals</h2><span class="disabled-item" aria-disabled="true">Agreements</span></section>
-<section><h2>Account</h2><span class="disabled-item" aria-disabled="true">Profile</span><span class="disabled-item" aria-disabled="true">Contact</span><span class="disabled-item" aria-disabled="true">Privacy</span></section>
+<section><h2>Management</h2>{% if perms.accounts.view_user %}<a href="{% url 'accounts:admin_users' %}">Users</a>{% else %}<span class="disabled-item" aria-disabled="true">Users</span>{% endif %}{% if perms.listings.view_roomlisting and perms.listings.view_listingrevision %}<a href="{% url 'accounts:admin_listings' %}">Listing</a>{% else %}<span class="disabled-item" aria-disabled="true">Listing</span>{% endif %}</section>
+<section><h2>Rentals</h2><a href="{% url 'accounts:admin_agreements' %}">Agreements</a></section>
+<section><h2>Account</h2><a href="{% url 'accounts:admin_profile' %}">Profile</a><span class="disabled-item" aria-disabled="true">Contact</span><span class="disabled-item" aria-disabled="true">Privacy</span></section>

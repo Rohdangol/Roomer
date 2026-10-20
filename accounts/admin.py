@@ -44,7 +44,7 @@ class VerificationReviewForm(forms.ModelForm):
         ):
             raise forms.ValidationError("This submission changed. Reload before reviewing it.")
         status = cleaned.get("status")
-        if current.status != OwnerVerification.Status.PENDING and status != current.status:
+        if current.status != OwnerVerification.Status.PENDING and (status != current.status or cleaned.get("rejection_reason", "") != current.rejection_reason):
             raise forms.ValidationError("Only pending submissions can be approved or rejected.")
         if status == OwnerVerification.Status.REJECTED and not cleaned.get("rejection_reason", "").strip():
             self.add_error("rejection_reason", "Explain why the document was rejected.")
@@ -71,14 +71,11 @@ class OwnerVerificationAdmin(admin.ModelAdmin):
         return False
 
     def save_model(self, request, obj, form, change):
-        if obj.status != OwnerVerification.Status.PENDING and (
-            "status" in form.changed_data or "rejection_reason" in form.changed_data
-        ):
-            obj.reviewed_by = request.user
-            obj.reviewed_at = timezone.now()
-        if obj.status != OwnerVerification.Status.REJECTED:
-            obj.rejection_reason = ""
-        super().save_model(request, obj, form, change)
+        from .verification_services import review_owner_identity
+        if {"status", "rejection_reason"} & set(form.changed_data):
+            review_owner_identity(request.user, obj.pk, form.cleaned_data["status"],
+                form.cleaned_data.get("rejection_reason", ""), form.cleaned_data["submitted_version"])
+        obj.refresh_from_db()
 
 
 from .models import TenantIdentityAttempt, TenantIdentityReview

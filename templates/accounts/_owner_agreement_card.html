@@ -1,0 +1,15 @@
+{# Caller has already scoped this agreement to the current Owner. #}
+<article class="owner-listing owner-agreement-card rental-card">
+    {% include 'accounts/_agreement_photo.html' %}
+    <div class="owner-agreement-content">
+        <div class="owner-agreement-heading"><h2>{{ terms.listing_snapshot.title }}</h2><span class="owner-agreement-status">{{ agreement.get_status_display }}</span></div>
+        <p class="owner-location">{{ terms.listing_snapshot.locality }}{% if terms.listing_snapshot.locality %}, {% endif %}{{ terms.listing_snapshot.city }}</p>
+        <div><p class="owner-agreement-label">Tenant</p><strong>{{ terms.tenant_snapshot.full_name|default:'Name not provided' }}</strong></div>
+        <p class="owner-agreement-rent">Rs {{ terms.monthly_rent }}/month</p>
+        <p>Agreement #{{ agreement.pk }} ? Version {{ terms.version }}</p>
+        <div class="owner-agreement-bottom"><div>
+            {% if agreement.status == 'pending' %}<p class="owner-agreement-label">Created On</p><strong>{{ agreement.created_at|date:'M j, Y' }}</strong>
+            {% else %}<p class="owner-agreement-label">Duration</p><strong>{{ terms.start_date|date:'M j, Y' }} &ndash; {{ terms.end_date|date:'M j, Y' }} (exclusive)</strong>{% endif %}
+        </div><a href="{% url 'accounts:owner_agreement_details' agreement.pk %}">View Agreement</a></div>
+    </div>
+</article>

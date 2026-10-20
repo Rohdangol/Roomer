@@ -1,0 +1,10 @@
+{% extends 'accounts/base_role.html' %}
+{% load static %}
+{% block title %}Notifications | Roomer{% endblock %}
+{% block body_class %}roomer-public owner-home-page owner-notifications-page{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'accounts/owner_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/notifications_page.css' %}">{% endblock %}
+{% block content %}
+<div class="owner-home owner-container notifications-page">
+    {% include 'core/_notification_page.html' with profile_url_name='accounts:owner_profile' read_all_url_name='accounts:owner_notifications_read_all' read_url_name='accounts:owner_notification_read' notification_title_id='owner-notifications-page-title' %}
+</div>
+{% endblock %}

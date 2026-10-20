@@ -184,6 +184,14 @@ Transitions: unread -> read; owner/tenant/admin recipient may read only their ow
 
 ## Deferred rental models — proposed app `rentals`
 
+**Superseded:** `rentals.0001` now implements RentalRequest, RentalAgreement and
+immutable AgreementTerms versions; `listings.0005` adds Reserved availability.
+See [RENTAL_WORKFLOWS.md](RENTAL_WORKFLOWS.md) and `rentals/models.py` for the
+authorized schema and lifecycle. Roommate/RentalRecord proposals below remain
+unimplemented; occupancy history is retained by each agreement's binding terms,
+activation/completion timestamps and completion actor. No duplicate rental
+status/history model is needed for the implemented workflow.
+
 The following contracts record known requirements; unresolved transitions/requiredness must be agreed before their migrations.
 
 ### RentalRequest (application)

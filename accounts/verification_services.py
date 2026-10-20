@@ -122,3 +122,25 @@ def review_tenant_identity(actor, attempt_id, decision, reason=""):
     if outcome == "applied":
         TenantIdentityAttempt.objects.filter(pk=attempt.pk).update(status=decision, reviewed_by=actor, reviewed_at=timezone.now(), rejection_reason=reason if decision == "rejected" else "")
     return outcome
+
+
+@transaction.atomic
+def review_owner_identity(actor, submission_id, decision, reason, submitted_version):
+    from .models import OwnerVerification
+    if not actor.is_authenticated or not actor.is_active or not actor.is_staff or not actor.has_perm("accounts.change_ownerverification"):
+        raise PermissionDenied
+    submission = OwnerVerification.objects.select_for_update().get(pk=submission_id)
+    if submission.user_id == actor.pk:
+        raise PermissionDenied("You cannot review your own identity.")
+    # Owner resubmission reuses this row; the timestamp distinguishes the submitted document version.
+    if submission.status != "pending" or submission.submitted_at.isoformat() != submitted_version:
+        raise ValidationError("This submission changed or was already reviewed. Reload before reviewing it.")
+    reason = reason.strip()
+    if decision not in ("approved", "rejected") or (decision == "rejected" and not reason):
+        raise ValidationError("Choose approval or rejection; rejection requires a reason.")
+    submission.status = decision
+    submission.rejection_reason = reason if decision == "rejected" else ""
+    submission.reviewed_by = actor
+    submission.reviewed_at = timezone.now()
+    submission.save(update_fields=["status", "rejection_reason", "reviewed_by", "reviewed_at"])
+    return submission

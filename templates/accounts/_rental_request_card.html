@@ -1,0 +1,8 @@
+<article class="owner-listing rental-card rental-request-card">
+<div class="request-photo-placeholder">{% with photo=application.listing_revision.photos.all|first %}{% if photo %}<img src="{% url 'accounts:rental_photo' 'request' application.pk photo.pk %}" alt="{{ application.listing_revision.title }}" loading="lazy">{% else %}<span>No room photo</span>{% endif %}{% endwith %}</div>
+<div><h2>{{ application.listing_revision.title }}</h2><p>{{ application.listing_revision.location_display }}</p>
+<p>Request #{{ application.pk }} · {{ application.get_status_display }} · {{ application.requested_at|date:'M j, Y' }}</p>
+{% if owner_view %}<p>Tenant: {{ application.tenant.full_name|default:'Name not provided' }}</p>{% endif %}
+<p>Move-in: {{ application.preferred_move_in }} · Total occupancy: {{ application.total_occupancy }}</p>
+{% if owner_view %}<a href="{% url 'accounts:owner_request_details' application.pk %}">View Request</a>{% else %}<a href="{% url 'accounts:request_details' application.pk %}">View Request</a>{% endif %}
+</div></article>

@@ -1,0 +1,5 @@
+<a href="{% url profile_url_name %}">&larr; Back to Profile</a>
+<h1>Notifications</h1><p>Your Roomer updates, newest first.</p>
+<section class="tenant-notification-panel notifications-page-content" aria-labelledby="{{ notification_title_id }}">
+    {% include 'core/_notification_content.html' %}
+</section>

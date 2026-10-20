@@ -1,5 +1,5 @@
 {% load static %}
 <section><img class="footer-logo" src="{% static 'accounts/images/Logo.png' %}" alt="Roomer"><p>Manage your properties with ease.</p></section>
-<section><h2>Properties</h2><span class="disabled-item" aria-disabled="true">My Listings</span><span class="disabled-item" aria-disabled="true">Add Listing</span></section>
-<section><h2>Rentals</h2><span class="disabled-item" aria-disabled="true">Requests</span><span class="disabled-item" aria-disabled="true">Agreements</span></section>
-<section><h2>Account</h2><span class="disabled-item" aria-disabled="true">Profile</span><span class="disabled-item" aria-disabled="true">Contact</span><span class="disabled-item" aria-disabled="true">Privacy</span></section>
+<section><h2>Properties</h2><a href="{% url 'accounts:owner_listings' %}">My Listings</a><a href="{% url 'accounts:owner_add_listing' %}">Add Listing</a></section>
+<section><h2>Rentals</h2><a href="{% url 'accounts:owner_requests' %}">Requests</a><a href="{% url 'accounts:owner_agreements' %}">Agreements</a></section>
+<section><h2>Account</h2><a href="{% url 'accounts:owner_profile' %}">Profile</a><span class="disabled-item" aria-disabled="true">Contact</span><span class="disabled-item" aria-disabled="true">Privacy</span></section>

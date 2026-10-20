@@ -1,0 +1,7 @@
+.notifications-page { padding-top:32px; }
+.notifications-page h1 { font-size:36px; margin:28px 0 8px; }
+.notifications-page > p { color:var(--color-text-muted); margin:0 0 28px; }
+.notifications-page .notifications-page-content { width:100%; max-width:850px; max-height:none; border:1px solid var(--color-border); }
+.notifications-page-content .tenant-notification { overflow-wrap:anywhere; }
+
+.admin-notifications-content { padding-bottom:48px; }

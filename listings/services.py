@@ -1,4 +1,5 @@
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Max
 from django.utils import timezone
@@ -68,13 +69,21 @@ def apply_details(revision, details):
         setattr(revision, name, value)
 
 
+def editable_listing_revision(listing):
+    latest = listing.revisions.order_by("-version").first()
+    # Pending/rejected submissions are the Owner's most recent corrections.
+    if latest and latest.approval_status in ("draft", "pending", "rejected"):
+        return latest
+    return listing.published_revision or latest
+
+
 @transaction.atomic
 def create_listing_draft(actor, listing_id):
     listing = RoomListing.objects.select_for_update().get(pk=listing_id)
     require_owner(actor, listing)
     if listing.revisions.filter(approval_status="draft").exists():
         raise ValidationError("This listing already has a draft.")
-    source = listing.published_revision or listing.revisions.order_by("-version").first()
+    source = editable_listing_revision(listing)
     if source is None:
         raise ValidationError("Create initial content with create_listing().")
     version = listing.revisions.aggregate(last=Max("version"))["last"] + 1
@@ -135,6 +144,12 @@ def reorder_listing_photos(actor, revision_id, photo_ids):
     RoomImage.objects.bulk_create([RoomImage(revision=revision, image=photos[pk].image.name, position=index) for index, pk in enumerate(photo_ids, 1)])
 
 
+def validate_available_from(value, previous=None):
+    # Historical dates may survive edits, but changing one must use today's local date.
+    if value is not None and value < timezone.localdate() and value != previous:
+        raise ValidationError({"available_from": "Choose today or a future date. An existing past date may only be kept unchanged."})
+
+
 def validate_publication(revision):
     revision.full_clean()
     photos = list(revision.photos.all())
@@ -150,12 +165,30 @@ def submit_listing_revision(actor, revision_id):
     listing, revision = locked_draft(actor, revision_id)
     if owner_needs_verification(actor):
         raise PermissionDenied("Owner verification approval is required.")
-    if listing.revisions.filter(approval_status="pending").exists():
-        raise ValidationError("This listing already has a pending revision.")
+    if listing.revisions.filter(version__gt=revision.version).exists():
+        raise ValidationError("A newer revision exists. Reload before submitting.")
+    previous = listing.revisions.exclude(approval_status="draft").order_by("-version").first()
+    validate_available_from(revision.available_from, previous.available_from if previous else None)
     validate_publication(revision)
     # Narrow updates are reserved for locked transitions, bypassing immutable save().
     now = timezone.now()
+    # Preserve old submitted snapshots without pretending an Admin rejected them.
+    superseded = list(listing.revisions.filter(approval_status="pending"))
+    listing.revisions.filter(approval_status="pending").update(approval_status="superseded", updated_at=now)
     ListingRevision.objects.filter(pk=revision.pk).update(approval_status="pending", submitted_at=now, updated_at=now)
+    if superseded:
+        from django.contrib.admin.models import CHANGE, LogEntry
+        for previous in superseded:
+            LogEntry.objects.log_actions(user_id=actor.pk,
+                queryset=ListingRevision.objects.filter(pk=previous.pk), action_flag=CHANGE,
+                change_message=f"Owner superseded revision {previous.version} with submission {revision.version}.")
+    # Use effective permissions, including groups and superusers, rather than role alone.
+    for reviewer in get_user_model().objects.filter(is_active=True, is_staff=True).exclude(pk=actor.pk):
+        if (reviewer.has_perm("listings.change_listingrevision") and (
+            reviewer.has_perm("listings.view_roomlisting") or reviewer.has_perm("listings.change_roomlisting"))):
+            create_notification(reviewer, "Listing submitted for review",
+                f"Listing #{listing.pk}, revision {revision.version} " +
+                ("resubmitted" if superseded else "submitted") + " for review. Open Admin Listings to review the latest submission.")
     revision.refresh_from_db()
     return revision
 
@@ -169,12 +202,25 @@ def review_listing_revision(actor, revision_id, decision, rejection_reason=""):
     revision = ListingRevision.objects.select_for_update().get(pk=revision_id)
     if listing.owner_id == actor.pk:
         raise PermissionDenied("Owners cannot approve their own listings.")
+    if revision.approval_status == "superseded":
+        raise ValidationError("The Owner resubmitted this listing. Reload and review the latest submission.")
     if revision.approval_status != "pending":
         raise ValidationError("This submitted version has already been reviewed or is not pending.")
+    if listing.revisions.filter(version__gt=revision.version).exclude(approval_status="draft").exists():
+        raise ValidationError("A newer submission exists. Review the latest submitted version.")
     reason = rejection_reason.strip()
     if decision not in ("approved", "rejected") or (decision == "rejected" and not reason):
         raise ValidationError("Choose approval or rejection; rejection requires a reason.")
     if decision == "approved":
+        # Eligibility can change after submission; approval must never lift an archive
+        # or publish for a suspended/unverified owner.
+        if (not listing.owner.is_active or listing.owner.is_staff or listing.owner.role != "owner"
+            or owner_needs_verification(listing.owner)):
+            raise ValidationError("Approval requires an active, verified Owner account.")
+        if listing.archived_at:
+            raise ValidationError("Archived listings cannot be approved. Existing administrative restrictions remain in force.")
+        if listing.published_revision_id is None and listing.listing_status == "occupied":
+            raise ValidationError("An occupied listing cannot be activated by first publication.")
         validate_publication(revision)
     now = timezone.now()
     ListingRevision.objects.filter(pk=revision.pk).update(approval_status=decision, reviewed_by=actor, reviewed_at=now, rejection_reason=reason if decision == "rejected" else "", updated_at=now)
@@ -197,9 +243,11 @@ def change_listing_availability(actor, listing_id, action):
     require_manager(actor, listing)
     if action not in ("activate", "deactivate", "archive", "restore"):
         raise ValidationError("Choose a supported listing action.")
-    # Phase one has no agreements: block every occupied record, never fake a lookup.
-    if listing.listing_status == "occupied":
-        raise ValidationError("Occupied listings cannot change availability or be archived.")
+    from rentals.models import RentalAgreement
+    # Binding reservations and occupancy use this same listing lock in rental transitions.
+    if (listing.listing_status in ("reserved", "occupied")
+        or RentalAgreement.objects.filter(listing=listing, status__in=["scheduled", "active"]).exists()):
+        raise ValidationError("Listings with a Scheduled or Active agreement cannot change availability or be archived.")
     is_admin = actor.is_staff
     if action == "activate":
         if listing.archived_at or not listing.published_revision_id or listing.published_revision.approval_status != "approved" or not listing.owner.is_active or owner_needs_verification(listing.owner):

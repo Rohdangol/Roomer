@@ -29,6 +29,7 @@ class RoomListing(models.Model):
         AVAILABLE = "available", "Available"
         INACTIVE = "inactive", "Inactive"
         OCCUPIED = "occupied", "Occupied"
+        RESERVED = "reserved", "Reserved"
 
     class ArchiveSource(models.TextChoices):
         OWNER = "owner", "Owner"
@@ -46,7 +47,7 @@ class RoomListing(models.Model):
 
     class Meta:
         constraints = [
-            models.CheckConstraint(condition=Q(listing_status__in=["available", "inactive", "occupied"]), name="listing_valid_status"),
+            models.CheckConstraint(condition=Q(listing_status__in=["available", "inactive", "reserved", "occupied"]), name="listing_valid_status"),
             models.CheckConstraint(condition=Q(archived_at__isnull=True, archived_by__isnull=True, archive_source="") | Q(archived_at__isnull=False, archived_by__isnull=False, archive_source__in=["owner", "admin"]), name="listing_archive_consistent"),
         ]
         indexes = [models.Index(fields=["listing_status", "archived_at"]), models.Index(fields=["owner", "listing_status"]), models.Index(fields=["published_at"])]
@@ -65,6 +66,7 @@ class ListingRevision(models.Model):
     class Approval(models.TextChoices):
         DRAFT = "draft", "Draft"
         PENDING = "pending", "Pending"
+        SUPERSEDED = "superseded", "Superseded"
         APPROVED = "approved", "Approved"
         REJECTED = "rejected", "Rejected"
 
@@ -73,7 +75,7 @@ class ListingRevision(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
     city = models.CharField(max_length=100)
-    locality = models.CharField(max_length=100)
+    locality = models.CharField(max_length=100, blank=True)
     address = models.CharField(max_length=255)
     latitude = models.DecimalField(max_digits=9, decimal_places=6)
     longitude = models.DecimalField(max_digits=9, decimal_places=6)
@@ -106,7 +108,7 @@ class ListingRevision(models.Model):
             models.UniqueConstraint(fields=["listing", "version"], name="revision_version_unique"),
             models.UniqueConstraint(fields=["listing"], condition=Q(approval_status="draft"), name="revision_one_draft"),
             models.UniqueConstraint(fields=["listing"], condition=Q(approval_status="pending"), name="revision_one_pending"),
-            models.CheckConstraint(condition=Q(approval_status__in=["draft", "pending", "approved", "rejected"]), name="revision_valid_status"),
+            models.CheckConstraint(condition=Q(approval_status__in=["draft", "pending", "superseded", "approved", "rejected"]), name="revision_valid_status"),
             models.CheckConstraint(condition=Q(version__gte=1), name="revision_positive_version"),
             models.CheckConstraint(condition=Q(monthly_rent__gt=0), name="revision_positive_rent"),
             models.CheckConstraint(condition=Q(security_deposit__gte=0), name="revision_nonnegative_deposit"),
@@ -114,16 +116,21 @@ class ListingRevision(models.Model):
             models.CheckConstraint(condition=Q(latitude__gte=-90, latitude__lte=90, longitude__gte=-180, longitude__lte=180), name="revision_valid_coordinates"),
             models.CheckConstraint(condition=Q(room_type__in=RoomType.values, furnishing__in=Furnishing.values), name="revision_valid_choices"),
             models.CheckConstraint(condition=Q(quiet_hours_start__isnull=True, quiet_hours_end__isnull=True) | Q(quiet_hours_start__isnull=False, quiet_hours_end__isnull=False), name="revision_quiet_hours_pair"),
-            models.CheckConstraint(condition=Q(approval_status="draft", submitted_at__isnull=True, reviewed_at__isnull=True, reviewed_by__isnull=True, rejection_reason="") | Q(approval_status="pending", submitted_at__isnull=False, reviewed_at__isnull=True, reviewed_by__isnull=True, rejection_reason="") | Q(approval_status="approved", submitted_at__isnull=False, reviewed_at__isnull=False, reviewed_by__isnull=False, rejection_reason="") | (Q(approval_status="rejected", submitted_at__isnull=False, reviewed_at__isnull=False, reviewed_by__isnull=False) & ~Q(rejection_reason="")), name="revision_review_consistent"),
+            models.CheckConstraint(condition=Q(approval_status="draft", submitted_at__isnull=True, reviewed_at__isnull=True, reviewed_by__isnull=True, rejection_reason="") | Q(approval_status__in=["pending", "superseded"], submitted_at__isnull=False, reviewed_at__isnull=True, reviewed_by__isnull=True, rejection_reason="") | Q(approval_status="approved", submitted_at__isnull=False, reviewed_at__isnull=False, reviewed_by__isnull=False, rejection_reason="") | (Q(approval_status="rejected", submitted_at__isnull=False, reviewed_at__isnull=False, reviewed_by__isnull=False) & ~Q(rejection_reason="")), name="revision_review_consistent"),
         ]
         indexes = [models.Index(fields=["listing", "approval_status"]), models.Index(fields=["approval_status", "submitted_at"])]
 
     def clean(self):
-        for name in ("title", "description", "city", "locality", "address"):
+        self.locality = self.locality.strip()
+        for name in ("title", "description", "city", "address"):
             value = getattr(self, name).strip()
             setattr(self, name, value)
             if not value:
                 raise ValidationError({name: "This field is required."})
+
+    @property
+    def location_display(self):
+        return ", ".join(value for value in (self.locality, self.city) if value)
 
     def save(self, *args, **kwargs):
         if self.pk and type(self).objects.filter(pk=self.pk).exclude(approval_status="draft").exists():

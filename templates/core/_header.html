@@ -10,6 +10,10 @@
             {% if user.is_authenticated %}
                 {% if user.role == 'tenant' and not user.is_staff %}
                     {% include 'core/_tenant_notifications.html' %}
+                {% elif user.role == 'owner' and not user.is_staff %}
+                    {% include 'core/_notifications.html' with notifications=owner_notifications unread_count=owner_unread_count read_all_url_name='accounts:owner_notifications_read_all' read_url_name='accounts:owner_notification_read' notification_title_id='owner-notification-title' notifications_page_url_name='accounts:owner_notifications' %}
+                {% elif user.is_staff %}
+                    {% include 'core/_notifications.html' with notifications=admin_notifications unread_count=admin_unread_count read_all_url_name='accounts:admin_notifications_read_all' read_url_name='accounts:admin_notification_read' notification_title_id='admin-notification-title' notifications_page_url_name='accounts:admin_notifications' %}
                 {% else %}
                 <details class="notifications header-dropdown">
                     <summary aria-label="Notifications" title="Notifications">{% if user.role == 'tenant' and not user.is_staff %}<img class="tenant-navbar-icon" src="{% static 'accounts/images/Notification.png' %}" width="22" height="22" alt="">{% else %}<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"/><path d="M10 21h4"/></svg>{% endif %}</summary>
@@ -36,6 +40,14 @@
                 {# Tenant profile is a normal link; logout lives on the Profile page. #}
                 <a class="tenant-profile-link" href="{% url 'accounts:tenant_profile' %}"{% if request.resolver_match.view_name == 'accounts:tenant_profile' %} aria-current="page"{% endif %}>
                     {% if user.profile_picture %}<img class="tenant-navbar-avatar" src="{% url 'accounts:profile_picture' %}" width="32" height="32" alt="">{% else %}<img class="tenant-navbar-icon" src="{% static 'accounts/images/profile.png' %}" width="22" height="22" alt="">{% endif %}<span>{{ user.full_name|default:user.email }}</span>
+                </a>
+                {% elif user.role == 'owner' and not user.is_staff %}
+                <a class="tenant-profile-link" href="{% url 'accounts:owner_profile' %}"{% if request.resolver_match.view_name == 'accounts:owner_profile' %} aria-current="page"{% endif %}>
+                    {% if user.profile_picture %}<img class="tenant-navbar-avatar" src="{% url 'accounts:owner_profile_picture' %}" width="32" height="32" alt="">{% else %}<img class="tenant-navbar-icon" src="{% static 'accounts/images/profile.png' %}" width="22" height="22" alt="">{% endif %}<span>{{ user.full_name|default:user.email }}</span>
+                </a>
+                {% elif user.is_staff %}
+                <a class="tenant-profile-link" href="{% url 'accounts:admin_profile' %}"{% if request.resolver_match.view_name == 'accounts:admin_profile' %} aria-current="page"{% endif %}>
+                    {% if user.profile_picture %}<img class="tenant-navbar-avatar" src="{% url 'accounts:admin_profile_picture' %}" width="32" height="32" alt="">{% else %}<img class="tenant-navbar-icon" src="{% static 'accounts/images/profile.png' %}" width="22" height="22" alt="">{% endif %}<span>{{ user.full_name|default:user.email }}</span>
                 </a>
                 {% else %}
                 <details class="profile-control header-dropdown">

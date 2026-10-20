@@ -1,0 +1,7 @@
+{% load static %}
+<details class="notifications header-dropdown tenant-notifications" data-tenant-notifications>
+<summary id="tenant-notification-toggle" aria-label="Notifications{% if unread_count %}, {{ unread_count }} unread{% endif %}" title="Notifications" aria-controls="tenant-notification-panel" aria-expanded="false"><img class="tenant-navbar-icon" src="{% static 'accounts/images/Notification.png' %}" width="22" height="22" alt="">{% if unread_count %}<span class="notification-badge" aria-hidden="true">{{ unread_count }}</span>{% endif %}</summary>
+<section class="notification-panel tenant-notification-panel" id="tenant-notification-panel" aria-labelledby="{{ notification_title_id }}">
+{% include 'core/_notification_content.html' %}
+{% if notifications_page_url_name %}<a href="{% url notifications_page_url_name %}">View all notifications</a>{% endif %}
+</section></details>

@@ -1,4 +1,5 @@
 from pathlib import Path
+from mimetypes import guess_type
 
 from django.contrib import messages
 from django.contrib.auth import login, logout
@@ -113,7 +114,7 @@ def verification(request):
 @login_required(login_url="accounts:login")
 def verification_document(request, pk):
     submission = OwnerVerification.objects.filter(pk=pk).first()
-    can_review = request.user.is_staff and (
+    can_review = request.user.is_active and request.user.is_staff and (
         request.user.has_perm("accounts.view_ownerverification")
         or request.user.has_perm("accounts.change_ownerverification")
     )
@@ -122,12 +123,13 @@ def verification_document(request, pk):
         raise Http404
     try:
         document = submission.document.open("rb")
-    except FileNotFoundError:
+    except OSError:
         raise Http404
+    preview = request.GET.get("preview") == "1" and Path(submission.document.name).suffix.lower() in (".jpg", ".jpeg", ".png")
     response = FileResponse(
-        document, as_attachment=True,
+        document, as_attachment=not preview,
         filename="identity-document" + Path(submission.document.name).suffix,
-        content_type="application/octet-stream",
+        content_type=(guess_type(submission.document.name)[0] if preview else "application/octet-stream"),
     )
     response["X-Content-Type-Options"] = "nosniff"
     response["Cache-Control"] = "private, no-store"

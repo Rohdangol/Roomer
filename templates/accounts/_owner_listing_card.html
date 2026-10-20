@@ -1,0 +1,20 @@
+{% load static %}
+            {% with latest=listing.dashboard_revisions|first %}
+            {# Only never-approved listings fall back to their unpublished submission. #}
+            {% with revision=listing.published_revision|default:latest %}
+            <a class="owner-listing owner-dashboard-card" href="{% url 'accounts:owner_listing_details' listing.pk %}" aria-label="View listing: {% if revision %}{{ revision.title }}{% else %}Listing #{{ listing.pk }}{% endif %}">
+                <div class="owner-photo">
+                    {% with photo=revision.photos.all|first %}{% if photo %}<img src="{% url 'accounts:owner_photo' photo.pk %}" alt="{{ revision.title }}" loading="lazy">{% else %}<span>Photo unavailable</span>{% endif %}{% endwith %}
+                </div>
+                <div class="owner-listing-content">
+                    {% if revision %}
+                    <div class="owner-price"><strong>Rs {{ revision.monthly_rent|floatformat:'-2' }}<small>/month</small></strong><span>{{ revision.get_room_type_display }}</span></div>
+                    <h3>{{ revision.title }}</h3>
+                    <p class="owner-location"><img src="{% static 'accounts/images/location.png' %}" width="16" height="16" alt="">{{ revision.location_display }}</p>
+                    <p class="owner-revision">{% if listing.published_revision_id %}{% if latest.approval_status == 'pending' %}Pending changes &mdash; awaiting Admin approval.{% elif latest.approval_status == 'rejected' %}Latest changes rejected. Showing approved details.{% else %}Approved{% endif %}{% elif revision.approval_status == 'pending' %}Pending submission &mdash; awaiting Admin approval. Owner-only preview.{% elif revision.approval_status == 'rejected' %}Rejected submission &mdash; not published.{% else %}Unpublished submission: {{ revision.get_approval_status_display }}{% endif %}</p>
+                    {% else %}<h3>Listing #{{ listing.pk }}</h3><p class="owner-revision">No listing details yet.</p>{% endif %}
+                    <p class="owner-status">{{ listing.get_listing_status_display }}</p>
+                </div>
+            </a>
+            {% endwith %}
+            {% endwith %}
