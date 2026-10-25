@@ -2,15 +2,12 @@
 {% load static %}
 {% block title %}Send Rental Request | Roomer{% endblock %}
 {% block body_class %}roomer-public tenant-home-page tenant-requests-page{% endblock %}
-{% block styles %}<link rel="stylesheet" href="{% static 'accounts/tenant_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/tenant_requests.css' %}"><link rel="stylesheet" href="{% static 'accounts/rental_workflows.css' %}">{% endblock %}
+{% block styles %}{% endblock %}
+{% block css_scope %}roomer-core css-rental-workflows-5 css-tenant-home css-tenant-requests{% endblock %}
 {% block content %}
 <div class="requests-content">
 <a class="request-back" href="{% url 'accounts:room_details' listing.pk %}">Back to Room</a>
-<h1>Send Rental Request</h1><h2>{{ revision.title }}</h2><p>{{ revision.location_display }} · Rs {{ revision.monthly_rent }}/month</p>
-<p>Available from {{ revision.available_from }}. Maximum occupancy: {{ revision.maximum_occupants }}.</p>
-<form class="rental-form" method="post" action="{% url 'accounts:request_create' listing.pk %}">
-{% csrf_token %}{{ form.non_field_errors }}
-{% for field in form %}<div class="rental-field">{{ field.label_tag }}{{ field }}{{ field.errors }}</div>{% endfor %}
-<button type="submit">Send Request</button> <a href="{% url 'accounts:room_details' listing.pk %}">Cancel</a>
-</form></div>
+<h1>Send Rental Request</h1>
+{% include 'accounts/_request_form.html' %}
+</div>
 {% endblock %}

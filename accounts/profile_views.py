@@ -1,3 +1,6 @@
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+from django.views.decorators.debug import sensitive_post_parameters
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
@@ -82,3 +85,26 @@ def profile_picture(request):
     response["Cache-Control"] = "private, no-store"
     response["X-Content-Type-Options"] = "nosniff"
     return response
+
+
+@sensitive_post_parameters()
+@login_required(login_url="accounts:login")
+@require_http_methods(["GET", "POST"])
+def tenant_password_change(request):
+    if not request.user.is_active or request.user.is_staff or request.user.role != "tenant":
+        return HttpResponseForbidden("This page is available to active tenants only.")
+    # Bind only the session user; Django validates the old password and new password rules.
+    form = PasswordChangeForm(request.user, request.POST if request.method == "POST" else None)
+    form.fields["old_password"].label = "Current Password"
+    form.fields["new_password1"].label = "New Password"
+    form.fields["new_password2"].label = "Confirm New Password"
+    if request.method == "POST" and form.is_valid():
+        user = form.save()
+        # Rotate this session's authentication hash so changing passwords does not sign it out.
+        update_session_auth_hash(request, user)
+        messages.success(request, "Your password has been changed.")
+        return redirect("accounts:tenant_profile")
+    return render(request, "accounts/password_change.html", {
+        "form": form, "profile_url": "accounts:tenant_profile",
+        "password_url": "accounts:tenant_password_change",
+    })

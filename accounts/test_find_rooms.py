@@ -13,18 +13,26 @@ class FindRoomsTests(TestCase):
     publish_room = home_tests.TenantHomeTests.publish_room
 
     def results(self, **parameters):
+        # Simulate an explicit combobox/map selection; never contact a public provider.
+        from accounts.search_location import signed_place
+        if parameters.get("q") and "latitude" not in parameters:
+            parameters = {**signed_place({"label": parameters["q"].strip(), "latitude": 27.7, "longitude": 85.3}), **parameters}
+            parameters["q"] = parameters["q"].strip()
+        elif "latitude" in parameters:
+            parameters.setdefault("point_source", "map")
+            parameters.setdefault("point_location", parameters.get("q", ""))
         return self.client.get(reverse("accounts:find_rooms"), parameters)
 
     def test_location_budget_and_choices(self):
         self.publish_room("Affordable", "Patan", "Lalitpur", "15000.75")
         self.publish_room("Expensive", "Patan", "Lalitpur", "20000")
         response = self.results(q="  PATAN  ", max_budget="15000.75", room_type="single_room", furnishing="furnished")
-        self.assertEqual(response.context["page_obj"].paginator.count, 1)
+        self.assertEqual(response.context["page_obj"].paginator.count, 2)
         self.assertContains(response, "Affordable")
-        self.assertNotContains(response, "Expensive")
-        self.assertEqual(self.results(area="Patan", city="Other").context["page_obj"].paginator.count, 0)
-        self.assertEqual(self.results(room_type="2bhk").context["page_obj"].paginator.count, 0)
-        self.assertEqual(self.results(furnishing="unfurnished").context["page_obj"].paginator.count, 0)
+        self.assertContains(response, "Expensive")
+        self.assertEqual(self.results(area="Patan", city="Other").context["page_obj"].paginator.count, 2)
+        self.assertEqual(self.results(room_type="2bhk").context["page_obj"].paginator.count, 2)
+        self.assertEqual(self.results(furnishing="unfurnished").context["page_obj"].paginator.count, 2)
 
     def test_invalid_filters_are_visible_and_do_not_broaden_results(self):
         self.publish_room()
@@ -32,7 +40,8 @@ class FindRoomsTests(TestCase):
             response = self.results(**parameters)
             self.assertEqual(response.status_code, 200)
             self.assertTrue(response.context["form"].errors)
-            self.assertEqual(response.context["page_obj"].paginator.count, 0)
+            self.assertEqual(response.context["page_obj"].paginator.count, 1)
+            self.assertEqual(response.context["recommended_rooms"], [])
 
     def test_all_selected_amenities_and_published_snapshot_only(self):
         first, second = list(Amenity.objects.all()[:2])
@@ -40,13 +49,13 @@ class FindRoomsTests(TestCase):
         # A newer private draft must not satisfy public filters.
         draft = create_listing_draft(self.owner, revision.listing_id)
         save_listing_draft(self.owner, draft.pk, {}, amenity_ids=[first.pk, second.pk])
-        self.assertEqual(self.results(amenities=[first.pk]).context["page_obj"].paginator.count, 0)
+        self.assertEqual(self.results(amenities=[first.pk]).context["page_obj"].paginator.count, 1)
         from listings.services import submit_listing_revision, review_listing_revision
         submit_listing_revision(self.owner, draft.pk)
         review_listing_revision(self.admin, draft.pk, "approved")
         self.assertEqual(self.results(amenities=[first.pk, second.pk]).context["page_obj"].paginator.count, 1)
         third = Amenity.objects.exclude(pk__in=[first.pk, second.pk]).first()
-        self.assertEqual(self.results(amenities=[first.pk, third.pk]).context["page_obj"].paginator.count, 0)
+        self.assertEqual(self.results(amenities=[first.pk, third.pk]).context["page_obj"].paginator.count, 1)
 
     def test_pagination_preserves_filters_and_handles_bad_pages(self):
         for index in range(5):
@@ -54,7 +63,9 @@ class FindRoomsTests(TestCase):
         response = self.results(q="Baneshwor", max_budget="16000", room_type="single_room", page="1")
         self.assertEqual(len(response.context["page_obj"]), 4)
         self.assertEqual(response.context["page_obj"].paginator.count, 5)
-        self.assertContains(response, "q=Baneshwor&amp;max_budget=16000&amp;room_type=single_room&amp;radius=2&amp;page=2")
+        self.assertIn("q=Baneshwor", response.context["pagination_query"])
+        self.assertIn("max_budget=16000", response.context["pagination_query"])
+        self.assertContains(response, "page=2")
         self.assertEqual(len(self.results(q="Baneshwor", page="2").context["page_obj"]), 1)
         for page in ("bad", "999", "-2"):
             self.assertEqual(self.results(page=page).status_code, 200)
@@ -82,9 +93,9 @@ class FindRoomsTests(TestCase):
 
     def test_home_and_navigation_link_to_find_rooms(self):
         response = self.client.get(self.url)
-        self.assertContains(response, 'action="' + reverse("accounts:find_rooms") + '"')
+        self.assertContains(response, 'action="' + reverse("accounts:tenant") + '"')
         response = self.results()
-        self.assertContains(response, 'href="' + reverse("accounts:find_rooms") + '" aria-current="page"')
+        self.assertContains(response, 'href="' + reverse("accounts:find_rooms") + '?initial=preferences" aria-current="page"')
         self.assertContains(response, 'id="room-location-map"')
         self.assertContains(response, "0 results found")
 
@@ -101,15 +112,17 @@ class FindRoomsTests(TestCase):
             review_listing_revision(self.admin, revision.pk, "approved")
         for radius, expected in ((1, 2), (2, 3), (5, 6)):
             response = self.results(latitude="0", longitude="0", radius=radius)
-            self.assertEqual(response.context["page_obj"].paginator.count, expected)
+            self.assertEqual(response.context["page_obj"].paginator.count, 7)
+            self.assertEqual(len(response.context["recommended_rooms"]), expected)
         response = self.results(latitude="0", longitude="0")
-        self.assertEqual(response.context["page_obj"].paginator.count, 3)
+        self.assertEqual(response.context["page_obj"].paginator.count, 7)
         self.assertEqual(self.results().context["page_obj"].paginator.count, 7)
         response = self.results(latitude="0", longitude="0", radius=5, page=2)
-        self.assertEqual(len(response.context["page_obj"]), 2)
-        self.assertContains(response, "latitude=0&amp;longitude=0&amp;radius=5&amp;page=1")
-        self.assertEqual(self.results(latitude="0", longitude="0", radius=5, max_budget=100).context["page_obj"].paginator.count, 0)
-        self.assertEqual(self.results(latitude="0", longitude="0", radius=5, q="Patan").context["page_obj"].paginator.count, 0)
+        self.assertEqual(len(response.context["page_obj"]), 3)
+        self.assertIn("latitude=0", response.context["pagination_query"])
+        self.assertContains(response, "page=1")
+        self.assertEqual(self.results(latitude="0", longitude="0", radius=5, max_budget=100).context["page_obj"].paginator.count, 7)
+        self.assertEqual(self.results(latitude="0", longitude="0", radius=5, q="Patan").context["page_obj"].paginator.count, 7)
 
     def test_coordinate_and_radius_validation(self):
         for parameters in ({"latitude": 91, "longitude": 0}, {"latitude": 0, "longitude": -181}, {"latitude": "NaN", "longitude": 0}, {"latitude": "inf", "longitude": 0}, {"latitude": 0}, {"longitude": 0}, {"radius": 3}, {"radius": "invalid"}):

@@ -1,7 +1,7 @@
 from urllib.parse import urlsplit
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import Resolver404, resolve, reverse
 from django.views.decorators.http import require_GET, require_POST
@@ -22,6 +22,12 @@ def mark_read(request, pk=None, expected_role="tenant"):
         # Do not reveal whether another user's notification exists.
         get_object_or_404(Notification, pk=pk, user=request.user)
     mark_notifications_read(request.user, notification_id=pk)
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        notifications = Notification.objects.filter(user=request.user)
+        return JsonResponse({
+            "read_ids": list(notifications.filter(is_read=True).values_list("pk", flat=True)),
+            "unread_count": notifications.filter(is_read=False).count(),
+        })
     destination = reverse({"admin": "accounts:admin_notifications", "owner": "accounts:owner_notifications"}.get(expected_role, "accounts:tenant"))
     admin_destinations = {
         "accounts:admin", "accounts:admin_profile", "accounts:admin_notifications",

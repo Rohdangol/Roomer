@@ -1,8 +1,9 @@
+{% load static %}
 <article class="admin-user-card">
-    <div class="admin-user-photo">{% if person.profile_picture %}<img src="{% url 'accounts:admin_user_photo' person.pk %}" alt="Profile photo of {{ person.full_name|default:'user' }}" loading="lazy">{% else %}<span>No profile photo</span>{% endif %}</div>
+    <div class="admin-user-photo">{% if person.profile_picture %}<img src="{% url 'accounts:admin_user_photo' person.pk %}" alt="Profile photo of {{ person.full_name|default:'user' }}" loading="lazy">{% else %}<img class="profile-image-fallback" src="{% static 'accounts/images/profile.png' %}" alt="Default profile icon">{% endif %}</div>
     <div class="admin-user-content"><div class="admin-user-heading"><h2>{{ person.full_name|default:'Name not provided' }}</h2><span class="admin-role">{{ person.get_role_display }}</span></div>
         <p>{{ person.email }}</p><p>Location: Not provided</p>
-        <dl class="admin-user-facts"><div><dt>Email</dt><dd>{% if person.registration_email_verified %}Verified{% else %}Unverified{% endif %}</dd></div><div><dt>Government ID</dt><dd>{{ person.identity_status_label }}</dd></div><div><dt>Account</dt><dd>{{ person.is_active|yesno:'Active,Inactive' }}</dd></div><div><dt>Joined</dt><dd><time datetime="{{ person.date_joined|date:'c' }}">{{ person.date_joined|date:'M j, Y' }}</time></dd></div></dl>
+        <dl class="admin-user-facts"><div><dt>Email</dt><dd>{% if person.registration_email_verified %}{% include 'core/_verified_icon.html' %}Verified{% else %}Unverified{% endif %}</dd></div><div><dt>Government ID</dt><dd>{% if person.identity_status_label == 'Approved' %}{% include 'core/_verified_icon.html' %}{% endif %}{{ person.identity_status_label }}</dd></div><div><dt>Account</dt><dd>{{ person.is_active|yesno:'Active,Inactive' }}</dd></div><div><dt>Joined</dt><dd><time datetime="{{ person.date_joined|date:'c' }}">{{ person.date_joined|date:'M j, Y' }}</time></dd></div></dl>
         <a class="admin-pill" href="{% url 'accounts:admin_user_details' person.pk %}">View User</a>
     </div>
 </article>

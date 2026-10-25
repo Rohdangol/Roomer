@@ -2,14 +2,15 @@
 {% load static %}
 {% block title %}{% if editing %}Edit Listing{% else %}Add New Listing{% endif %} | Roomer{% endblock %}
 {% block body_class %}roomer-public owner-home-page owner-add-page{% endblock %}
-{% block styles %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""><link rel="stylesheet" href="{% static 'accounts/owner_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_listing_form.css' %}">{% endblock %}
+{% block styles %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">{% endblock %}
+{% block css_scope %}roomer-core css-owner-home css-owner-listing-form{% endblock %}
 {% block scripts %}<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script><script src="{% static 'accounts/room_map.js' %}" defer></script><script src="{% static 'accounts/owner_listing_form.js' %}" defer></script>{% endblock %}
 {% block content %}
 <div class="owner-home owner-container owner-add-content">
     <a href="{% url 'accounts:owner_listings' %}">&larr; Back to My Listings</a>
     <h1>{% if editing %}Edit Listing{% else %}Add New Listing{% endif %}</h1><p>Provide the details of the room you'd like to list.</p>
     <form method="post" enctype="multipart/form-data" class="owner-listing-form">
-        {% csrf_token %}{{ form.source_version }}{{ form.latitude }}{{ form.longitude }}{{ form.locality }}
+        {% csrf_token %}{{ form.source_version }}{{ form.latitude }}{{ form.longitude }}
         {% if form.errors %}<div class="listing-errors" role="alert"><p>Please correct the errors below. Your entered details are retained; select your photos again before publishing.</p>{{ form.non_field_errors }}{{ form.source_version.errors }}</div>{% endif %}
         {% for title, fields in sections %}
         <section id="section-{{ forloop.counter }}" aria-labelledby="heading-{{ forloop.counter }}">
@@ -18,6 +19,7 @@
             <div class="listing-location">
                 <div class="listing-location-controls">
                     {% include 'accounts/_owner_form_field.html' with field=form.city %}
+                    {% include 'accounts/_owner_form_field.html' with field=form.locality %}
                     <div class="listing-address-search">
                         {% include 'accounts/_owner_form_field.html' with field=form.address %}
                         <button type="button" id="find-listing-location" data-url="{% url 'accounts:owner_find_location' %}">Search Address</button>
@@ -26,13 +28,13 @@
                     <p>Search City + Address, or use your current position to fill a nearby address. You can correct the populated City and Address and adjust the pin for accuracy.</p>
                     <p id="current-location-status" role="status"></p><p id="location-search-status" role="status"></p>
                     <ul id="location-search-results" aria-label="Matching locations"></ul>
-                    {{ form.latitude.errors }}{{ form.longitude.errors }}{{ form.locality.errors }}
+                    {{ form.latitude.errors }}{{ form.longitude.errors }}
                     <p id="listing-map-status" role="status">Select a pin on the map.</p>
                     <small>Location lookup sends City and Address, or GPS coordinates, to <a href="https://photon.komoot.io/" target="_blank" rel="noopener">Photon</a>. Data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>.</small>
                 </div>
                 <div class="listing-map-panel"><div id="listing-map" tabindex="0" aria-label="Select property location"></div></div>
             </div>
-            {% else %}<div class="listing-fields">{% for field in fields %}{% if not field.is_hidden %}{% include 'accounts/_owner_form_field.html' with field=field %}{% endif %}{% endfor %}</div>{% endif %}
+            {% else %}<div class="listing-fields{% if title == 'Basic Information' %} listing-basic-fields{% endif %}">{% for field in fields %}{% if not field.is_hidden %}{% include 'accounts/_owner_form_field.html' with field=field %}{% endif %}{% endfor %}</div>{% endif %}
         </section>
         {% endfor %}
         <section aria-labelledby="photos-title"><h2 id="photos-title">Room Photos</h2><p id="photo-help">Upload 1-10 nonanimated JPEG, PNG or WebP photos, up to 5 MB each. The first photo is the cover. If JavaScript is unavailable, photos must be selected again after validation errors.</p><div id="existing-photos">{% for photo in existing_photos %}<figure class="listing-photo-preview"><img src="{% url 'accounts:owner_photo' photo.pk %}" alt="Existing room photo {{ forloop.counter }}"><figcaption>{% if forloop.first %}Current cover{% else %}Existing photo {{ forloop.counter }}{% endif %}</figcaption><label><input type="checkbox" name="remove_photos" value="{{ photo.pk }}"{% if photo.pk|stringformat:'s' in removed_photo_ids %} checked{% endif %}> Remove this photo</label></figure>{% endfor %}</div>{{ form.remove_photos.errors }}<label for="id_photos">{% if editing %}Add photos (optional){% else %}Choose photos{% endif %}</label>{{ form.photos }}{{ form.photos.errors }}<div id="photo-previews" aria-live="polite"></div></section>

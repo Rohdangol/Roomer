@@ -47,7 +47,7 @@ class RoleRouteTests(TestCase):
             self.assertRedirects(self.client.get(owner_url), verification_url)
         submission.status = "approved"
         submission.save()
-        self.assertContains(self.client.get(owner_url), "Owner area")
+        self.assertContains(self.client.get(owner_url), "Welcome Back Owner")
         self.assertEqual(self.client.get(reverse("accounts:tenant")).status_code, 403)
         self.assertEqual(self.client.get(reverse("accounts:admin")).status_code, 403)
 
@@ -55,7 +55,7 @@ class RoleRouteTests(TestCase):
         for user in (self.staff, self.superuser):
             with self.subTest(user=user.username):
                 self.sign_in(user)
-                self.assertRedirects(self.client.get(reverse("accounts:admin")), reverse("admin:index"))
+                self.assertEqual(self.client.get(reverse("accounts:admin")).status_code, 200)
                 for name in ("tenant", "owner"):
                     self.assertEqual(self.client.get(reverse(f"accounts:{name}")).status_code, 403)
 

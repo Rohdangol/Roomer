@@ -1,0 +1,6 @@
+<dialog class="neighbourhood-modal" aria-labelledby="neighbourhood-modal-title"{% if show_neighbourhoods %} open{% endif %}>
+    <div class="neighbourhood-modal-heading"><h2 id="neighbourhood-modal-title">Browse by Neighbourhood</h2><a href="{% url 'accounts:tenant' %}" data-close-neighbourhoods aria-label="Close neighbourhoods">Close</a></div>
+    <div class="neighbourhood-modal-body">
+        {% for neighbourhood in all_neighbourhoods %}<a class="home-neighbourhood-row" href="{% url 'accounts:tenant' %}?search=1&amp;area={{ neighbourhood.published_revision__locality|urlencode }}&amp;city={{ neighbourhood.published_revision__city|urlencode }}"><span><h3>{{ neighbourhood.published_revision__locality }}</h3></span><span class="home-neighbourhood-arrow" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span></a>{% empty %}<p>No neighbourhoods with available rooms yet. Check back when owners publish rooms.</p>{% endfor %}
+    </div>
+</dialog>

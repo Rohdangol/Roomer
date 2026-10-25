@@ -1,5 +1,6 @@
 {% extends 'core/base.html' %}
 {% load static %}
 {% block title %}Verify Email | Roomer{% endblock %}
-{% block styles %}<link rel="stylesheet" href="{% static 'accounts/verify_email.css' %}">{% endblock %}
+{% block styles %}{% endblock %}
+{% block css_scope %}roomer-core css-verify-email{% endblock %}
 {% block content %}<section class="home-panel"><h1>Verify your email</h1>{% if verification_error %}<p role="alert">{{ verification_error }}</p><a href="{% url 'accounts:login' %}">Sign in</a>{% else %}<p>Confirm ownership of the email address used for your Roomer registration.</p><form method="post">{% csrf_token %}<button type="submit">Verify Email</button></form>{% endif %}</section>{% endblock %}

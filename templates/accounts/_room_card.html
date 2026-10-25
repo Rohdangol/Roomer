@@ -8,18 +8,20 @@
                 <span>Photo unavailable</span>
             {% endif %}
         {% endwith %}
-        {% include 'accounts/_save_room.html' with listing=listing %}
+        {% if not compact %}{% include 'accounts/_save_room.html' with listing=listing %}{% endif %}
     </div>
     <div class="room-card-content">
+        {% if show_match %}<p class="room-match"><strong>{{ listing.recommendation.percentage }}% Preference match</strong></p>{% endif %}
         <div class="room-price"><strong>Rs {{ revision.monthly_rent|floatformat:'-2' }}</strong><span>/month</span>{% if not compact %}<span class="room-type">{{ revision.get_room_type_display }}</span>{% endif %}</div>
-        <h3>{{ revision.title }}</h3>
+        <h3>{% if compact %}<a class="fresh-room-link" href="{% url 'accounts:room_details' listing.pk %}">{{ revision.title }}</a>{% else %}{{ revision.title }}{% endif %}</h3>
         <p class="room-location">{{ revision.location_display }}</p>
         {% if not compact %}
             <ul class="room-amenities" aria-label="Amenities">
                 {% for link in revision.amenity_links.all %}<li>{{ link.amenity.name }}</li>{% empty %}<li>No amenities listed</li>{% endfor %}
             </ul>
-            <a class="room-details" href="{% url 'accounts:room_details' listing.pk %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}">View Details</a>
+            <a class="room-details" href="{% url 'accounts:room_details' listing.pk %}{% if show_match %}?{{ request.GET.urlencode }}&amp;match_context={{ listing.recommendation.context|urlencode }}{% elif request.GET %}?{{ request.GET.urlencode }}{% endif %}">View Details</a>
         {% endif %}
     </div>
+    {% if compact %}{% include 'accounts/_save_room.html' with listing=listing %}{% endif %}
 </article>
 {% endwith %}

@@ -2,17 +2,18 @@
 {% load static %}
 {% block admin_title %}User Details | Roomer Admin{% endblock %}
 {% block body_class %}roomer-public admin-dashboard-page admin-user-details-page{% endblock %}
-{% block styles %}<link rel="stylesheet" href="{% static 'accounts/admin_dashboard.css' %}"><link rel="stylesheet" href="{% static 'accounts/admin_users.css' %}"><link rel="stylesheet" href="{% static 'accounts/admin_user_details.css' %}">{% endblock %}
+{% block styles %}{% endblock %}
+{% block css_scope %}roomer-core css-admin-dashboard css-admin-user-details css-admin-users{% endblock %}
 {% block content %}
 <div class="admin-container admin-users-content admin-user-detail">
 <a href="{% url 'accounts:admin_users' %}">&larr; Back to Users</a><h1>User Details</h1><p class="admin-users-intro">View user information, verification and account activity.</p>
 <section class="admin-user-card admin-personal-panel" aria-labelledby="personal-title">
-<div class="admin-user-photo">{% if person.profile_picture %}<img src="{% url 'accounts:admin_user_photo' person.pk %}" alt="Profile photo of {{ person.full_name|default:'user' }}">{% else %}<span>No profile photo</span>{% endif %}</div>
+<div class="admin-user-photo">{% if person.profile_picture %}<img src="{% url 'accounts:admin_user_photo' person.pk %}" alt="Profile photo of {{ person.full_name|default:'user' }}">{% else %}<img class="profile-image-fallback" src="{% static 'accounts/images/profile.png' %}" alt="Default profile icon">{% endif %}</div>
 <div><h2 id="personal-title">Personal Information</h2><dl class="admin-personal-facts"><div><dt>Full Name</dt><dd>{{ person.full_name|default:'Not provided' }}</dd></div><div><dt>Phone Number</dt><dd>{{ person.phone_number|default:'Not provided' }}</dd></div><div><dt>Date of Birth</dt><dd>Not provided</dd></div><div><dt>Current Location</dt><dd>Not provided</dd></div><div><dt>Email</dt><dd>{{ person.email }}</dd></div><div><dt>Joined On</dt><dd>{{ person.date_joined|date:'M j, Y' }}</dd></div><div><dt>Role</dt><dd>{{ person.get_role_display }}</dd></div><div><dt>Account</dt><dd>{{ person.is_active|yesno:'Active,Inactive' }}</dd></div></dl></div>
 </section>
 <section class="admin-user-section" aria-labelledby="verification-title"><h2 id="verification-title">Verification</h2>
-<div class="admin-verification-detail"><div><h3>Email</h3><p>{{ person.email }}</p><p>Phone verification is not available.</p>{% if email_verified %}<p>Verified on {{ person.email_verified_at|date:'M j, Y, g:i A' }}</p>{% endif %}</div><span class="admin-user-status">{% if email_verified %}Verified{% else %}Unverified{% endif %}</span></div>
-<div class="admin-verification-detail"><div><h3>Government ID</h3><p>Document type: {{ identity.document_type_label|default:'Not submitted' }}</p><p>Reviewed: {{ identity.reviewed_at|date:'M j, Y, g:i A'|default:'Not reviewed' }}</p>{% if review_url %}<a class="admin-pill" href="{{ review_url }}">View verification review</a>{% endif %}</div><span class="admin-user-status">{{ identity.status_label|default:'Not submitted' }}</span></div>
+<div class="admin-verification-detail"><div><h3>Email</h3><p>{{ person.email }}</p><p>Phone verification is not available.</p>{% if email_verified %}<p>Verified on {{ person.email_verified_at|date:'M j, Y, g:i A' }}</p>{% endif %}</div><span class="admin-user-status">{% if email_verified %}{% include 'core/_verified_icon.html' %}Verified{% else %}Unverified{% endif %}</span></div>
+<div class="admin-verification-detail"><div><h3>Government ID</h3><p>Document type: {{ identity.document_type_label|default:'Not submitted' }}</p><p>Reviewed: {{ identity.reviewed_at|date:'M j, Y, g:i A'|default:'Not reviewed' }}</p>{% if review_url %}<a class="admin-pill" href="{{ review_url }}">View verification review</a>{% endif %}</div><span class="admin-user-status">{% if identity.status == 'approved' %}{% include 'core/_verified_icon.html' %}{% endif %}{{ identity.status_label|default:'Not submitted' }}</span></div>
 </section>
 <section class="admin-user-section" aria-labelledby="overview-title">
 {% if person.role == 'owner' %}<div class="admin-section-heading"><h2 id="overview-title">Owner Overview</h2>{% if overview.listings_url %}<a class="admin-pill" href="{{ overview.listings_url }}">View Listings</a>{% else %}<span class="admin-disabled">View Listings unavailable without permission</span>{% endif %}</div>

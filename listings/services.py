@@ -25,6 +25,19 @@ def published_listings():
     ).select_related("owner", "published_revision")
 
 
+def tenant_readable_listings(actor):
+    """Current approved rooms may remain readable after they stop accepting requests."""
+    if not actor.is_authenticated or not actor.is_active or actor.is_staff or actor.role != "tenant":
+        raise PermissionDenied("An active Tenant account is required.")
+    # Reservation/occupancy is not moderation. Archives, suspension and unpublished
+    # revisions still block current listing content, including its photo endpoint.
+    return RoomListing.objects.filter(
+        listing_status__in=["available", "reserved", "occupied"], archived_at__isnull=True,
+        owner__is_active=True, owner__is_staff=False, owner__role="owner",
+        owner__owner_verification__status="approved", published_revision__approval_status="approved",
+    ).select_related("owner", "published_revision")
+
+
 def require_owner(actor, listing=None):
     if not actor.is_authenticated or not actor.is_active or actor.is_staff or actor.role != "owner":
         raise PermissionDenied("An active owner account is required.")
@@ -246,8 +259,8 @@ def change_listing_availability(actor, listing_id, action):
     from rentals.models import RentalAgreement
     # Binding reservations and occupancy use this same listing lock in rental transitions.
     if (listing.listing_status in ("reserved", "occupied")
-        or RentalAgreement.objects.filter(listing=listing, status__in=["scheduled", "active"]).exists()):
-        raise ValidationError("Listings with a Scheduled or Active agreement cannot change availability or be archived.")
+        or RentalAgreement.objects.filter(listing=listing).exclude(status__in=["completed", "pending"]).exists()):
+        raise ValidationError("Listings with a reserved or active agreement cannot change availability or be archived.")
     is_admin = actor.is_staff
     if action == "activate":
         if listing.archived_at or not listing.published_revision_id or listing.published_revision.approval_status != "approved" or not listing.owner.is_active or owner_needs_verification(listing.owner):

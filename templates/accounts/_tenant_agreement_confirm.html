@@ -1,0 +1,12 @@
+<button type="button" data-open-agreement-consent hidden>Confirm Agreement</button>
+{# Progressive enhancement keeps the required version-bound consent available without JS. #}
+<form data-agreement-consent-form class="owner-agreement-consent-form" method="post" action="{% url 'accounts:agreement_confirm' agreement.pk %}">
+    {% csrf_token %}<input type="hidden" name="terms_id" value="{{ terms.pk }}">
+    <label for="tenant-agreement-consent"><input id="tenant-agreement-consent" type="checkbox" name="confirm" required><span>I have read and agree to the full terms of agreement version {{ terms.version }}.</span></label>
+    <div class="owner-agreement-consent-actions"><button type="submit">Yes, Confirm</button><button type="button" data-close-agreement-consent hidden>No</button></div>
+</form>
+<dialog class="owner-agreement-consent-dialog" aria-labelledby="tenant-consent-title" aria-describedby="tenant-consent-description">
+    <h2 id="tenant-consent-title">Confirm agreement version {{ terms.version }}</h2>
+    <p id="tenant-consent-description">Your confirmation will submit this version for Admin approval.</p>
+    <div data-agreement-consent-content></div>
+</dialog>

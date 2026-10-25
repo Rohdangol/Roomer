@@ -1,0 +1,19 @@
+{% if can_edit or can_send %}
+<div class="owner-agreement-primary-actions">
+    {% if can_edit %}<a class="owner-agreement-edit-button" href="{% url 'accounts:owner_agreement_prepare' agreement.rental_request_id %}">Edit Draft</a>{% endif %}
+    {% if can_send %}<button type="button" data-open-agreement-consent hidden>Confirm &amp; Send to Tenant</button>{% endif %}
+</div>
+{% endif %}
+{% if can_send %}
+{# Without JavaScript the same CSRF-protected consent form stays visible on the page. #}
+<form data-agreement-consent-form id="owner-agreement-consent-form" class="owner-agreement-consent-form" method="post" action="{% url 'accounts:owner_agreement_send' agreement.pk %}">
+    {% csrf_token %}<input type="hidden" name="terms_id" value="{{ terms.pk }}">
+    <label for="owner-agreement-consent"><input id="owner-agreement-consent" type="checkbox" name="confirm" required> <span>I have reviewed and consent to agreement version {{ terms.version }} being sent to the Tenant.</span></label>
+    <div class="owner-agreement-consent-actions"><button type="submit">Yes, Confirm &amp; Send</button><button type="button" data-close-agreement-consent hidden>No</button></div>
+</form>
+<dialog class="owner-agreement-consent-dialog" aria-labelledby="owner-consent-title" aria-describedby="owner-consent-description">
+    <h2 id="owner-consent-title">Confirm agreement version {{ terms.version }}</h2>
+    <p id="owner-consent-description">Review the full agreement before consenting. Sending makes this version read-only.</p>
+    <div data-agreement-consent-content></div>
+</dialog>
+{% endif %}

@@ -2,7 +2,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError
-from django.db.models import Q
+from django.db.models import Count, Exists, OuterRef, Q
+from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -10,10 +11,10 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 
 from accounts.admin_dashboard_views import require_staff
 from .agreement_services import (complete_agreement, confirm_agreement, finalize_agreement, local_today,
-    prepare_agreement, scoped_agreements, send_agreement)
-from .forms import AgreementActionForm, AgreementTermsForm
+    prepare_agreement, scoped_agreements, send_agreement, request_agreement_changes, review_agreement)
+from .forms import AgreementActionForm, AgreementTermsForm, AgreementReasonForm
 from .models import RentalAgreement
-from .views import paginated_statuses, request_access, scoped_requests
+from .views import request_access, scoped_requests
 
 
 def agreement_access(request, role):
@@ -36,13 +37,33 @@ def agreement_list(request, role="tenant"):
     if response:
         return response
     records = scoped_agreements(request.user).select_related("current_terms")
+    if role == "owner":
+        from accounts.models import TenantIdentityAttempt
+        # The badge is actual identity approval, independent of agreement/email consent.
+        records = records.annotate(tenant_identity_verified=Exists(TenantIdentityAttempt.objects.filter(
+            user_id=OuterRef("tenant_id"), status="approved")))
     query = request.GET.get("q", "").strip()[:150] if role == "admin" else ""
     if query:
         condition = Q(current_terms__tenant_snapshot__full_name__icontains=query) | Q(current_terms__owner_snapshot__full_name__icontains=query)
         if query.isdecimal():
             condition |= Q(pk=int(query))
         records = records.filter(condition)
-    context = paginated_statuses(request, records, RentalAgreement.Status.choices, per_page=3)
+    # These are presentation buckets only; stored workflow states remain precise.
+    groups = {
+        "pending": ["draft", "awaiting_tenant", "changes_requested", "pending_admin", "scheduled", "pending"],
+        "active": ["active"],
+        "completed": ["completed"],
+    }
+    status = request.GET.get("status", "all")
+    if status not in {"all", *groups}:
+        raise Http404("Unknown agreement filter.")
+    counts = dict(records.values("status").annotate(total=Count("pk")).values_list("status", "total"))
+    filters = [{"value": "all", "label": "All", "count": sum(counts.values())}]
+    filters += [{"value": value, "label": value.title(), "count": sum(counts.get(state, 0) for state in states)}
+        for value, states in groups.items()]
+    filtered = records if status == "all" else records.filter(status__in=groups[status])
+    context = {"status": status, "status_filters": filters,
+        "page_obj": Paginator(filtered, 3).get_page(request.GET.get("page"))}
     for agreement in context["page_obj"]:
         agreement.display_terms = visible_terms(agreement, request.user)
     context.update(role=role, owner_view=role != "tenant", query=query,
@@ -72,16 +93,32 @@ def agreement_detail(request, pk, role="tenant", version=None):
     if version is not None:
         terms = get_object_or_404(versions, version=version)
     current = terms.pk == agreement.current_terms_id
+    modern = agreement.workflow_version == 2
+    can_review = role == "admin" and all(request.user.has_perm(p) for p in (
+        "rentals.change_rentalagreement", "rentals.approve_rentalagreement"))
+    # A Tenant can read prior sent versions while an unsent replacement is private.
+    reviews = agreement.versions.filter(pk__in=versions.values("pk")).prefetch_related("reviews__reviewer")
     context = {"agreement": agreement, "terms": terms, "role": role, "versions": versions,
-        "current_version": current, "today": local_today(),
-        "can_confirm": role == "tenant" and current and agreement.status == "pending" and terms.sent_at and not terms.tenant_accepted_at,
-        "can_edit": role == "owner" and agreement.status == "pending" and current,
-        "can_send": role == "owner" and agreement.status == "pending" and current and not terms.sent_at,
-        "can_finalize": role == "owner" and agreement.status == "pending" and current and terms.tenant_accepted_at,
-        "can_complete": current and agreement.status == "active" and local_today() >= terms.end_date and
+        "review_versions": reviews, "current_version": current, "today": local_today(),
+        "can_confirm": modern and role == "tenant" and current and agreement.status == "awaiting_tenant" and terms.sent_at and not terms.tenant_accepted_at,
+        "can_edit": modern and role == "owner" and current and agreement.status in ("draft", "changes_requested"),
+        "can_send": modern and role == "owner" and agreement.status == "draft" and current and not terms.sent_at,
+        "can_review": modern and can_review and current and agreement.status == "pending_admin",
+        "can_complete": current and agreement.status == "active" and terms.end_date and
+            (local_today() > terms.end_date if modern else local_today() >= terms.end_date) and
             (role == "owner" or (role == "admin" and request.user.has_perm("rentals.change_rentalagreement"))),
+        "can_download": agreement.status in ("scheduled", "active", "completed"),
         "detail_url": reverse(detail_name(role), args=[pk]),
     }
+    if role in ("owner", "tenant"):
+        from accounts.models import OwnerVerification, TenantIdentityAttempt
+        # Badges describe actual identity approval, never inferred from agreement consent.
+        context["owner_verified"] = OwnerVerification.objects.filter(user_id=agreement.owner_id, status="approved").exists()
+        context["tenant_verified"] = TenantIdentityAttempt.objects.filter(user_id=agreement.tenant_id, status="approved").exists()
+    if role == "tenant":
+        from listings.services import tenant_readable_listings
+        # Occupancy may block new requests without hiding an approved room from its tenant.
+        context["can_view_room"] = tenant_readable_listings(request.user).filter(pk=agreement.listing_id).exists()
     template = {"owner": "accounts/owner_agreement_details.html", "admin": "custom_admin/agreement_details.html"}.get(role, "accounts/agreement_details.html")
     return render(request, template, context)
 
@@ -94,7 +131,7 @@ def agreement_prepare(request, pk):
         return response
     application = get_object_or_404(scoped_requests(request.user, True), pk=pk, status="accepted")
     agreement = RentalAgreement.objects.filter(rental_request=application).select_related("current_terms").first()
-    if agreement and agreement.status != "pending":
+    if agreement and (agreement.workflow_version != 2 or agreement.status not in ("draft", "changes_requested")):
         return redirect("accounts:owner_agreement_details", pk=agreement.pk)
     names = ("monthly_rent", "security_deposit", "payment_due_day", "start_date", "end_date", "additional_terms")
     terms = agreement.current_terms if agreement else None
@@ -127,13 +164,20 @@ def agreement_action(request, pk, action, role="tenant"):
     if response:
         return response
     agreement = get_object_or_404(scoped_agreements(request.user), pk=pk)
-    form = AgreementActionForm(request.POST)
+    reason_action = action in ("changes", "return")
+    form = AgreementReasonForm(request.POST) if reason_action else AgreementActionForm(request.POST)
     if not form.is_valid():
-        messages.error(request, "Confirm the action for the displayed agreement version.")
+        messages.error(request, "Supply an explanation for this version." if reason_action else "Confirm consent for the displayed agreement version.")
     else:
         try:
-            {"send": send_agreement, "confirm": confirm_agreement, "finalize": finalize_agreement,
-                "complete": complete_agreement}[action](request.user, agreement.pk, form.cleaned_data["terms_id"])
+            terms_id = form.cleaned_data["terms_id"]
+            if action == "changes":
+                request_agreement_changes(request.user, agreement.pk, terms_id, form.cleaned_data["reason"])
+            elif action in ("approve", "return"):
+                review_agreement(request.user, agreement.pk, terms_id, action, form.cleaned_data.get("reason", ""))
+            else:
+                {"send": send_agreement, "confirm": confirm_agreement, "finalize": finalize_agreement,
+                    "complete": complete_agreement}[action](request.user, agreement.pk, terms_id)
         except ValidationError as error:
             messages.error(request, " ".join(error.messages))
         except IntegrityError:

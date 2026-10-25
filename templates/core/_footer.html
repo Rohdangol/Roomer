@@ -1,6 +1,6 @@
 <footer class="site-footer">
     <div class="footer-content">
-        {% comment %}Role partials mirror the wireframes; unfinished destinations are disabled text.{% endcomment %}
+        {% comment %}Role partials share clickable placeholders for unavailable destinations.{% endcomment %}
         <div class="footer-columns">
             {% if user.is_staff %}{% include 'core/_footer_admin.html' %}{% elif user.is_authenticated and user.role == 'owner' %}{% include 'core/_footer_owner.html' %}{% else %}{% include 'core/_footer_tenant.html' %}{% endif %}
         </div>

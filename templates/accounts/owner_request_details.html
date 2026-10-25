@@ -1,42 +1,20 @@
-{% extends 'accounts/base_role.html' %}
+{% extends 'accounts/request_details.html' %}
 {% load static %}
-{% block title %}Request Details | Roomer{% endblock %}
-{% block body_class %}roomer-public owner-home-page owner-request-details-page{% endblock %}
-{% block styles %}<link rel="stylesheet" href="{% static 'accounts/owner_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_request_details.css' %}"><link rel="stylesheet" href="{% static 'accounts/rental_workflows.css' %}">{% endblock %}
-{% block content %}
-<div class="owner-home owner-container owner-request-detail">
-    <a class="request-back" href="{% url 'accounts:owner_requests' %}">&larr; Back to Requests</a>
-    <h1>Rental Request</h1>
+{% comment %}Reuse the participant-scoped request layout; only role navigation and participant differ.{% endcomment %}
+{% block body_class %}roomer-public owner-home-page owner-request-details-page request-details-page{% endblock %}
+{% block styles %}
 
-    {# Future data blocks must be populated only after request ownership is checked. #}
-    {% block request_metadata %}
-    <dl class="request-metadata"><div><dt>Request ID</dt><dd>{{ application.pk }}</dd></div><div><dt>Requested On</dt><dd>{{ application.requested_at }}</dd></div><div><dt>Request Status</dt><dd>{{ application.get_status_display }}</dd></div></dl>
-    {% endblock %}
-    <section aria-labelledby="requested-room-title"><h2 id="requested-room-title">Requested Room</h2>
-        {% block requested_room %}
-        {% include 'accounts/_rental_request_card.html' %}
-        {% endblock %}
-    </section>
-    <section class="request-timeline-section" aria-labelledby="request-timeline-title"><h2 id="request-timeline-title">Request Status</h2>
-        {% block request_timeline %}
-        <p class="request-muted">{{ application.get_status_display }}{% if application.responded_at %} on {{ application.responded_at }}{% endif %}</p>
-        <ol class="owner-request-timeline" aria-label="Request stages"><li>Request Sent</li><li>Owner Review</li><li>Decision</li></ol>
-        {% endblock %}
-    </section>
-    <div class="owner-request-columns">
-        <section aria-labelledby="request-information-title"><h2 id="request-information-title">Request Details</h2>
-            {% block request_information %}
-            <dl class="request-information"><div><dt>Preferred Move-in Date</dt><dd>{{ application.preferred_move_in }}</dd></div><div><dt>Total Occupancy (including tenant)</dt><dd>{{ application.total_occupancy }}</dd></div></dl>
-            <h3>Message</h3><p class="rental-message">{{ application.message }}</p>
-            {% endblock %}
-        </section>
-        <section class="request-tenant-summary" aria-labelledby="request-tenant-title"><h2 id="request-tenant-title">Tenant Summary</h2>
-            {% block request_tenant %}
-            <div class="request-tenant-content"><div class="request-avatar-placeholder">Photo unavailable</div><div><h3>{{ application.tenant.full_name|default:"Name not provided" }}</h3><p>Tenant</p></div></div>
-            {% endblock %}
-            <button type="button" disabled aria-describedby="tenant-profile-note">View Profile</button><p id="tenant-profile-note" class="request-muted">Tenant profile viewing is not available yet.</p>
-        </section>
+{% endblock %}
+{% block css_scope %}roomer-core css-owner-home css-owner-request-details-2 css-rental-workflows-5 css-request-details css-tenant-requests{% endblock %}
+{% block scripts %}<script src="{% static 'accounts/owner_request_decision.js' %}" defer></script>{% endblock %}
+{% block request_back %}<a class="request-back" href="{% url 'accounts:owner_requests' %}">&larr; Back to Requests</a>{% endblock %}
+{% block request_room_link %}<a class="request-view-room" href="{% url 'accounts:owner_listing_details' application.listing_id %}">View Room</a>{% endblock %}
+{% block request_participant %}
+<section class="request-owner-card" aria-label="Tenant details">
+    <div class="request-owner-summary">
+        <img class="request-owner-avatar" src="{% static 'accounts/images/profile.png' %}" width="104" height="104" alt="">
+        <div><h2>{{ application.tenant.full_name|default:'Name not provided' }}</h2><p>Tenant</p><p>{{ application.tenant.phone_number|default:'Phone number not provided' }}</p><p class="request-owner-member">Member Since {{ application.tenant.date_joined|date:'Y' }}</p></div>
+        {% if tenant_verified %}<span class="request-owner-badge">{% include 'core/_verified_icon.html' %}Verified</span>{% endif %}
     </div>
-    {% include 'accounts/_rental_request_actions.html' %}
-</div>
+</section>
 {% endblock %}

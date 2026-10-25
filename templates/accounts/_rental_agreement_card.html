@@ -12,7 +12,7 @@
 <p>Agreement #{{ agreement.pk }} · Version {{ terms.version }}</p>
 <p>Tenant: {{ terms.tenant_snapshot.full_name|default:'Name not provided' }} · Owner: {{ terms.owner_snapshot.full_name|default:'Name not provided' }}</p>
 <p class="owner-agreement-rent">Rs {{ terms.monthly_rent }}/month</p>
-<div class="owner-agreement-bottom"><p>{{ terms.start_date }} – {{ terms.end_date }} (exclusive)</p>
+<div class="owner-agreement-bottom"><p>{{ terms.start_date }} – {{ terms.end_date|default:'End date needed' }} ({% if agreement.workflow_version == 1 %}exclusive, legacy{% else %}inclusive{% endif %})</p>
 <a href="{% if role == 'admin' %}{% url 'accounts:admin_agreement_details' agreement.pk %}{% elif role == 'owner' %}{% url 'accounts:owner_agreement_details' agreement.pk %}{% else %}{% url 'accounts:agreement_details' agreement.pk %}{% endif %}">View Agreement</a></div>
 </div></article>
 {% endif %}

@@ -30,9 +30,9 @@ class SharedLayoutTests(TestCase):
                 else:
                     self.assertTemplateUsed(response, "accounts/base_auth.html")
                     self.assertNotContains(response, 'class="site-header"')
-                    self.assertContains(response, "Roomer logo placeholder")
+                    self.assertContains(response, "/static/accounts/images/Logo.png")
                 self.assertContains(response, "Skip to content")
-                self.assertContains(response, "/static/core/layout.css")
+                self.assertContains(response, "/static/core/roomer.css")
                 self.assertContains(response, "/static/core/layout.js")
                 self.assertContains(response, "Sign up" if name == "accounts:login" else "Create Account")
 

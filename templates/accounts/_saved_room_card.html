@@ -1,0 +1,9 @@
+<article class="room-card saved-room-card">
+    <div class="room-photo">{% if entry.photo_url %}<img src="{{ entry.photo_url }}" alt="{{ entry.title }}" loading="lazy" data-listing-photo>{% else %}<span>Photo unavailable</span>{% endif %}{% include 'accounts/_save_room.html' with listing=entry.save_target %}</div>
+    <div class="room-card-content">
+        <span class="saved-room-availability">{{ entry.status }}</span>
+        {% if entry.title %}<div class="room-price"><strong>Rs {{ entry.rent|floatformat:'-2' }}</strong><span>/month</span></div><h3>{{ entry.title }}</h3><p class="room-location">{{ entry.location|default:'Location not recorded' }}</p>{% if entry.historical %}<p class="saved-room-note">Historical summary from your agreement, not the current listing or price.</p>{% endif %}
+        {% else %}<h3>{% if entry.status == 'Inactive / unpublished' or entry.status == 'Unpublished' %}This saved room is not published{% else %}This saved room is unavailable{% endif %}</h3><p class="saved-room-note">Current room details cannot be shown. You can remove it from your saved rooms.</p>{% endif %}
+        {% if entry.detail_url %}<a class="room-details" href="{{ entry.detail_url }}">View Details</a>{% elif entry.agreement_url %}<a class="room-details" href="{{ entry.agreement_url }}">View Your Agreement</a>{% endif %}
+    </div>
+</article>

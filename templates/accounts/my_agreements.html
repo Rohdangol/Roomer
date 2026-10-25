@@ -2,11 +2,17 @@
 {% load static %}
 {% block title %}My Agreements | Roomer{% endblock %}
 {% block body_class %}roomer-public tenant-home-page tenant-agreements-page{% endblock %}
-{% block styles %}<link rel="stylesheet" href="{% static 'accounts/tenant_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/tenant_requests.css' %}"><link rel="stylesheet" href="{% static 'accounts/tenant_agreements.css' %}"><link rel="stylesheet" href="{% static 'accounts/rental_workflows.css' %}">{% endblock %}
+{% block styles %}{% endblock %}
+{% block css_scope %}roomer-core css-rental-workflows-5 css-tenant-agreements css-tenant-home css-tenant-requests{% endblock %}
 {% block content %}
-<section class="requests-content" aria-labelledby="agreements-title"><h1 id="agreements-title">My Agreements</h1><p class="requests-intro">View and review rental agreements.</p>
-{% include 'accounts/_rental_filters.html' %}
+<section class="requests-content" aria-labelledby="agreements-title"><h1 id="agreements-title">My Agreements</h1><p class="requests-intro">View and manage your rental agreements.</p>
+<nav class="request-tabs" aria-label="Filter agreements by status">{% for filter in status_filters %}<a href="{{ list_url }}?status={{ filter.value }}"{% if status == filter.value %} aria-current="page"{% endif %}>{{ filter.label }}</a>{% endfor %}</nav>
+<p class="tenant-request-count">{{ page_obj.paginator.count }} agreement{{ page_obj.paginator.count|pluralize }}</p>
 
-{% for agreement in page_obj %}{% include 'accounts/_rental_agreement_card.html' %}{% empty %}<div class="request-empty owner-empty admin-empty"><h2>No {% if status != 'all' %}{{ status }} {% endif %}agreements</h2><p>{% if status == 'all' %}Agreements will appear here when prepared and sent.{% else %}No agreements match these filters.{% endif %}</p></div>{% endfor %}
-{% include 'accounts/_rental_pagination.html' %}
+{% for agreement in page_obj %}{% include 'accounts/_tenant_agreement_card.html' %}{% empty %}<div class="request-empty owner-empty admin-empty"><h2>No {% if status != 'all' %}{{ status }} {% endif %}agreements</h2><p>{% if status == 'all' %}Agreements will appear here when prepared and sent.{% else %}No agreements match these filters.{% endif %}</p></div>{% endfor %}
+{% if page_obj.has_other_pages %}<nav class="tenant-request-pagination" aria-label="Agreement pages">
+{% if page_obj.has_previous %}<a href="?status={{ status }}&amp;page=1" aria-label="First page">&laquo;</a><a href="?status={{ status }}&amp;page={{ page_obj.previous_page_number }}" aria-label="Previous page">&lsaquo;</a>{% endif %}
+{% for number in page_obj.paginator.page_range %}{% if number == page_obj.number %}<span aria-current="page">{{ number }}</span>{% else %}<a href="?status={{ status }}&amp;page={{ number }}">{{ number }}</a>{% endif %}{% endfor %}
+{% if page_obj.has_next %}<a href="?status={{ status }}&amp;page={{ page_obj.next_page_number }}" aria-label="Next page">&rsaquo;</a><a href="?status={{ status }}&amp;page={{ page_obj.paginator.num_pages }}" aria-label="Last page">&raquo;</a>{% endif %}
+</nav>{% endif %}
 </section>{% endblock %}

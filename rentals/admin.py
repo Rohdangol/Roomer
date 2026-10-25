@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import AgreementTerms, RentalAgreement, RentalRequest
+from .models import AgreementReview, AgreementTerms, RentalAgreement, RentalRequest
 
 
 @admin.register(RentalRequest)
@@ -31,4 +31,13 @@ class AgreementTermsAdmin(RentalRequestAdmin):
 
     def has_view_permission(self, request, obj=None):
         # Terms contain participant snapshots and require agreement access as well.
+        return request.user.has_perm("rentals.view_rentalagreement") and super().has_view_permission(request, obj)
+
+
+@admin.register(AgreementReview)
+class AgreementReviewAdmin(RentalRequestAdmin):
+    list_display = ("id", "terms", "reviewer", "decision", "created_at")
+    list_filter = ("decision",)
+
+    def has_view_permission(self, request, obj=None):
         return request.user.has_perm("rentals.view_rentalagreement") and super().has_view_permission(request, obj)

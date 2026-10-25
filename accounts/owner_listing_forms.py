@@ -35,7 +35,6 @@ class OwnerListingForm(forms.ModelForm):
         # Owner, status and approval fields are never accepted from the browser.
         fields = DRAFT_FIELDS
         widgets = {
-            "locality": forms.HiddenInput(),
             "latitude": forms.HiddenInput(),
             "longitude": forms.HiddenInput(),
             "available_from": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
@@ -64,7 +63,11 @@ class OwnerListingForm(forms.ModelForm):
         })
         # Bathroom is no longer editable; retain its snapshot value when submitting edits.
         self.fields["bathroom_details"].disabled = True
-        self.fields["locality"].required = False
+        # New submissions and edits need an explicit neighbourhood; legacy rows stay intact.
+        self.fields["locality"].required = True
+        self.fields["locality"].label = "Locality / Neighbourhood"
+        self.fields["locality"].widget.attrs["placeholder"] = "e.g. Baneshwor"
+        self.fields["locality"].help_text = "Used in Browse by Neighbourhood after approval."
         if source is not None:
             self.fields["photos"].required = False
             self.fields["remove_photos"] = forms.ModelMultipleChoiceField(
@@ -89,9 +92,6 @@ class OwnerListingForm(forms.ModelForm):
             validate_available_from(cleaned.get("available_from"), self.previous_available_from)
         except forms.ValidationError as error:
             self.add_error("available_from", error.error_dict["available_from"])
-        # Keep an existing area when GPS/manual selection provides no replacement.
-        if not cleaned.get("locality") and self.source is not None:
-            cleaned["locality"] = self.source.locality
         for name, minimum, maximum in (("latitude", -90, 90), ("longitude", -180, 180)):
             if cleaned.get(name) is not None and not minimum <= cleaned[name] <= maximum:
                 self.add_error(name, "Select a valid location on the map.")

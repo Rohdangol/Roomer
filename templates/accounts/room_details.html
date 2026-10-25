@@ -2,8 +2,9 @@
 {% load static %}
 {% block title %}{{ revision.title }} | Roomer{% endblock %}
 {% block body_class %}roomer-public tenant-home-page room-details-page{% endblock %}
-{% block styles %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""><link rel="stylesheet" href="{% static 'accounts/tenant_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/room_details.css' %}"><link rel="stylesheet" href="{% static 'accounts/rental_workflows.css' %}">{% endblock %}
-{% block scripts %}<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script><script src="{% static 'accounts/room_map.js' %}" defer></script><script src="{% static 'accounts/room_details.js' %}" defer></script><script src="{% static 'accounts/tenant_home.js' %}" defer></script>{% endblock %}
+{% block styles %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">{% endblock %}
+{% block css_scope %}roomer-core css-rental-workflows-5 css-room-details css-tenant-home{% endblock %}
+{% block scripts %}<script src="{% static 'accounts/preference_match_popover.js' %}" defer></script><script src="{% static 'accounts/request_modal.js' %}" defer></script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script><script src="{% static 'accounts/room_map.js' %}" defer></script><script src="{% static 'accounts/room_details.js' %}" defer></script><script src="{% static 'accounts/tenant_home.js' %}" defer></script>{% endblock %}
 {% block content %}
 <div class="tenant-home room-detail-content">
 <a class="back-link" href="{% url 'accounts:find_rooms' %}{% if search_query %}?{{ search_query }}{% endif %}">&larr; Back to Find Rooms</a>
@@ -12,16 +13,38 @@
 {% if photos %}<div class="gallery-main room-photo"><img id="gallery-main-photo" src="{% url 'accounts:tenant_photo' photos.0.pk %}" alt="{{ revision.title }}" data-listing-photo></div><div class="gallery-thumbnails">{% for photo in photos %}<a href="{% url 'accounts:tenant_photo' photo.pk %}" data-gallery-photo aria-label="Show room photo {{ forloop.counter }}"><img src="{% url 'accounts:tenant_photo' photo.pk %}" alt="Room photo {{ forloop.counter }}" loading="lazy"></a>{% endfor %}</div>{% else %}<div class="gallery-main room-photo">Photos unavailable</div>{% endif %}
 </div>
 <div class="detail-summary"><div class="detail-title"><h1 id="room-title">{{ revision.title }}</h1>{% include 'accounts/_save_room.html' with listing=listing %}</div><p class="room-location">{{ revision.location_display }}</p><p class="detail-rent">Rs {{ revision.monthly_rent|floatformat:'-2' }}<span>/month</span></p>
-<p>Status: <span class="detail-pill">{{ listing.get_listing_status_display }}</span></p><p>Attributes: <span class="detail-pill">{{ revision.get_room_type_display }}</span> <span class="detail-pill">{{ revision.get_furnishing_display }}</span></p>
-<h2>Amenities</h2><ul class="detail-amenities">{% for link in revision.amenity_links.all %}<li>{{ link.amenity.name }}</li>{% empty %}<li>No amenities listed</li>{% endfor %}</ul>
+{% include 'accounts/_room_preference_match.html' %}
+<p>Status: <span class="detail-pill">{{ listing.get_listing_status_display }}</span></p><p>Attributes: <span class="detail-pill">{{ revision.get_room_type_display }}</span></p>
+<h2>Amenities</h2><ul class="detail-amenities"><li>{{ revision.get_furnishing_display }}</li>{% for link in revision.amenity_links.all %}<li>{{ link.amenity.name }}</li>{% endfor %}</ul>
 <dl class="summary-facts"><div><dt>Security Deposit</dt><dd>Rs {{ revision.security_deposit|floatformat:'-2' }} (one-time)</dd></div><div><dt>Available From</dt><dd>{{ revision.available_from|date:'F j, Y' }}</dd></div><div><dt>Maximum Occupancy</dt><dd>Up to {{ revision.maximum_occupants }} people</dd></div></dl>
-<a class="send-request" href="{% url 'accounts:request_create' listing.pk %}">Send Request</a></div>
+{% if can_request_room %}<a class="send-request" data-request-modal-trigger href="{% url 'accounts:request_create' listing.pk %}">Send Request</a>{% else %}<button class="send-request" type="button" disabled>Not accepting new requests ? {{ listing.get_listing_status_display }}</button>{% endif %}</div>
 </section>
-<section class="detail-overview"><h2>Room Overview</h2><dl class="overview-facts"><div><dt>Room Type</dt><dd>{{ revision.get_room_type_display }}</dd></div><div><dt>Bathroom</dt><dd>{{ revision.bathroom_details|default:'Not specified' }}</dd></div><div><dt>Furnishing</dt><dd>{{ revision.get_furnishing_display }}</dd></div><div><dt>Floor</dt><dd>{{ revision.floor|default:'Not specified' }}</dd></div><div><dt>Occupancy</dt><dd>Up to {{ revision.maximum_occupants }} people</dd></div><div><dt>Available</dt><dd>{{ revision.available_from|date:'M j, Y' }}</dd></div></dl>
+<section class="detail-overview"><h2>Room Overview</h2><dl class="overview-facts"><div><dt>Room Type</dt><dd>{{ revision.get_room_type_display }}</dd></div><div><dt>Furnishing</dt><dd>{{ revision.get_furnishing_display }}</dd></div><div><dt>Floor</dt><dd>{{ revision.floor|default:'Not specified' }}</dd></div><div><dt>Occupancy</dt><dd>Up to {{ revision.maximum_occupants }} people</dd></div><div><dt>Available</dt><dd>{{ revision.available_from|date:'M j, Y' }}</dd></div></dl>
 <h2>About this Room</h2><div class="detail-description">{{ revision.description|default:'No description provided.'|linebreaks }}</div></section>
 <div class="detail-lower"><div><section><h2>House Rules</h2><ul class="house-rules"><li>Cooking: {{ revision.cooking_allowed|yesno:'Allowed,Not allowed' }}</li><li>Visitors: {{ revision.visitors_allowed|yesno:'Allowed,Not allowed' }}</li><li>Smoking: {{ revision.smoking_allowed|yesno:'Allowed,Not allowed' }}</li><li>Pets: {{ revision.pets_allowed|yesno:'Allowed,Not allowed' }}</li><li>Quiet hours: {% if revision.quiet_hours_start and revision.quiet_hours_end %}{{ revision.quiet_hours_start|time:'g:i A' }} to {{ revision.quiet_hours_end|time:'g:i A' }}{% else %}Not specified{% endif %}</li></ul>{{ revision.additional_rules|linebreaks }}</section>
-<section class="listed-by"><h2>Listed By</h2>{# Public display identity only; contact details and verification files stay private. #}<div class="owner-card"><div class="owner-heading"><h3>{{ owner_name }}</h3>{% if owner_verified %}<span class="detail-pill">Identity verified</span>{% endif %}</div><p>Room Owner</p><p>Member since {{ listing.owner.date_joined|date:'Y' }}</p><button type="button" disabled>View Profile (not available yet)</button></div></section></div>
-<section class="detail-location"><h2>Location</h2>{% if location_point %}{{ location_point|json_script:'room-location-point' }}<div id="detail-location-map" aria-label="Room location map" tabindex="0"></div><p id="detail-map-status" role="status">Loading map. Coordinates: {{ revision.latitude }}, {{ revision.longitude }}.</p><noscript><p>Enable JavaScript to view the map.</p></noscript>{% else %}<div class="empty-state">Location coordinates are not available.</div>{% endif %}</section></div>
+<section class="listed-by"><h2>Listed By</h2>
+{# Only this eligible listing's owner contact is shown; identity files remain private. #}
+<div class="owner-card">
+    <div class="owner-card-details">
+        <img class="owner-avatar-placeholder" src="{% static 'accounts/images/profile.png' %}" width="88" height="88" alt="">
+        <div class="owner-identity">
+            <h3>{{ owner_name }}</h3>
+            <p>Room Owner</p>
+            <p class="owner-phone">{{ listing.owner.phone_number|default:'Phone number not provided' }}</p>
+            <p class="owner-member-since">Member Since {{ listing.owner.date_joined|date:'Y' }}</p>
+        </div>
+        {% if owner_verified %}<span class="owner-verified-badge">{% include 'core/_verified_icon.html' %}Verified</span>{% endif %}
+    </div>
+</div></section></div>
+<section class="detail-location"><h2>Location</h2>
+{# Read only the approved published revision, matching the map and room details. #}
+<dl class="detail-location-fields"><div><dt>Address</dt><dd>{{ revision.address|default:'Not provided' }}</dd></div><div><dt>City</dt><dd>{{ revision.city|default:'Not provided' }}</dd></div><div><dt>Locality</dt><dd>{{ revision.locality|default:'Not specified' }}</dd></div></dl>{% if location_point %}{{ location_point|json_script:'room-location-point' }}<div id="detail-location-map" aria-label="Room location map" tabindex="0"></div><p id="detail-map-status" role="status">Loading map. Coordinates: {{ revision.latitude }}, {{ revision.longitude }}.</p><noscript><p>Enable JavaScript to view the map.</p></noscript>{% else %}<div class="empty-state">Location coordinates are not available.</div>{% endif %}</section></div>
 <section class="detail-nearby"><div class="section-heading"><div><h2>Rooms nearby</h2><p>Other available rooms within 2 km, newest first. No similarity scoring is used.</p></div>{% if location_point %}<a href="{% url 'accounts:find_rooms' %}?{{ nearby_query }}">View All &rarr;</a>{% endif %}</div><div class="room-grid">{% for listing in similar_rooms %}{% include 'accounts/_room_card.html' with listing=listing %}{% empty %}<div class="empty-state"><p>{% if location_point %}No other available rooms within 2 km.{% else %}Nearby rooms cannot be determined without location coordinates.{% endif %}</p></div>{% endfor %}</div></section>
 </div>
+{# The trigger remains a real link when native dialogs or JavaScript are unavailable. #}
+<dialog class="request-modal" id="rental-request-modal" aria-labelledby="request-modal-title">
+    <div class="request-modal-header"><h2 id="request-modal-title">Send Rental Request</h2><button type="button" data-request-close aria-label="Close rental request">Close</button></div>
+    <p class="request-modal-status" role="status"></p>
+    <div class="request-modal-content"></div>
+</dialog>
 {% endblock %}

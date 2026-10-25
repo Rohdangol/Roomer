@@ -1,18 +1,12 @@
-{% extends 'accounts/base_role.html' %}
+{% extends 'accounts/owner_agreement_details.html' %}
 {% load static %}
-{% block title %}Rental Agreement | Roomer{% endblock %}
-{% block body_class %}roomer-public tenant-home-page tenant-agreements-page{% endblock %}
-{% block styles %}<link rel="stylesheet" href="{% static 'accounts/tenant_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/tenant_requests.css' %}"><link rel="stylesheet" href="{% static 'accounts/tenant_agreements.css' %}"><link rel="stylesheet" href="{% static 'accounts/rental_workflows.css' %}">{% endblock %}
-{% block content %}
-<div class="requests-content agreement-details"><a class="request-back" href="{% url 'accounts:my_agreements' %}">Back to Agreements</a><h1>Rental Agreement</h1>
-{# Extension points accept only an owned agreement and authorized snapshot/party display data. #}
-{% block agreement_availability %}{% endblock %}
-{% block agreement_metadata %}{% include 'accounts/_agreement_metadata.html' %}{% endblock %}
-{% block agreement_listing %}<section class="agreement-section"><h2>Room</h2>{% include 'accounts/_agreement_room.html' %}</section>{% endblock %}
-{% block agreement_summary %}<section class="agreement-section"><h2>Agreement Summary</h2>{% include 'accounts/_agreement_terms.html' %}</section>{% endblock %}
-<div class="agreement-parties">{% block agreement_tenant %}<section><h2>Tenant</h2>{% include 'accounts/_agreement_party.html' with party=terms.tenant_snapshot %}</section>{% endblock %}{% block agreement_owner %}<section><h2>Owner</h2>{% include 'accounts/_agreement_party.html' with party=terms.owner_snapshot %}</section>{% endblock %}</div>
-<div class="agreement-terms-layout">{% block agreement_house_rules %}<section><h2>House Rules</h2>{% include 'accounts/_agreement_rules.html' %}</section>{% endblock %}{% block agreement_terms %}<section><h2>Terms &amp; Conditions</h2><div class="rental-message">{{ terms.additional_terms }}</div></section>{% endblock %}</div>
-{% block agreement_confirmation %}<section class="agreement-section"><h2>Agreement Confirmation</h2>{% include 'accounts/_agreement_confirmations.html' %}</section>{% endblock %}
-{% block agreement_download %}{% include 'accounts/_agreement_actions.html' %}{% endblock %}
-</div>
+{% comment %}Both parties share snapshot layout; role-specific routes/actions stay separate.{% endcomment %}
+{% block body_class %}roomer-public tenant-home-page tenant-agreements-page tenant-agreement-details-page{% endblock %}
+{% block styles %}
+
 {% endblock %}
+{% block css_scope %}roomer-core css-owner-agreement-details css-owner-home css-rental-workflows-2 css-tenant-home{% endblock %}
+{% block scripts %}<script src="{% static 'accounts/agreement_send_modal.js' %}" defer></script>{% endblock %}
+{% block agreement_back %}<a class="request-back" href="{% url 'accounts:my_agreements' %}">&larr; Back to Agreements</a>{% endblock %}
+{% block agreement_listing_link %}{% if can_view_room %}<a class="owner-agreement-view-listing" href="{% url 'accounts:room_details' agreement.listing_id %}">View Room</a>{% else %}<p class="owner-agreement-version">Room is no longer publicly available. These agreed details remain available.</p>{% endif %}{% endblock %}
+{% block agreement_review_heading %}{% if can_download %}Download your agreement.{% else %}Review the full agreement before confirming or requesting changes.{% endif %}{% endblock %}

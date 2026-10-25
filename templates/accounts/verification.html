@@ -2,13 +2,14 @@
 {% load static %}
 {% block title %}Owner Verification | Roomer{% endblock %}
 {% block styles %}
-    <link rel="stylesheet" href="{% static 'accounts/verification.css' %}">
+
 {% endblock %}
+{% block css_scope %}roomer-core css-verification{% endblock %}
 {% block content %}
     <div class="verification-panel">
         <h1>Verify your identity</h1>
         <p>Owners need admin approval before accessing Roomer’s homepage. Submit your citizenship or national ID for review.</p>
-        <p class="status">Status: {% if submission %}{{ submission.get_status_display }}{% else %}Not submitted{% endif %}</p>
+        <p class="status">Status: {% if submission %}{% if submission.status == 'approved' %}{% include 'core/_verified_icon.html' %}{% endif %}{{ submission.get_status_display }}{% else %}Not submitted{% endif %}</p>
         {% if submission %}
             <p>Document: {{ submission.get_document_type_display }}</p>
             <p>Submitted: {{ submission.submitted_at }}</p>

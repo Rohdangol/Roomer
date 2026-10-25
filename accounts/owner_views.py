@@ -45,6 +45,27 @@ def home(request):
 
 @login_required(login_url="accounts:login")
 @require_GET
+def request_tenant_photo(request, pk):
+    if (not request.user.is_active or request.user.is_staff
+            or request.user.role != User.Role.OWNER or owner_needs_verification(request.user)):
+        return HttpResponseForbidden("This photo is available to verified owners only.")
+    # A request identifier grants access only to the tenant who applied to this owner's listing.
+    application = RentalRequest.objects.filter(pk=pk, listing__owner=request.user).select_related("tenant").first()
+    if application is None or not application.tenant.profile_picture:
+        raise Http404
+    picture = application.tenant.profile_picture
+    try:
+        stream = picture.open("rb")
+    except (FileNotFoundError, OSError):
+        raise Http404
+    response = FileResponse(stream, content_type=guess_type(picture.name)[0] or "application/octet-stream")
+    response["Cache-Control"] = "private, no-store"
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
+@login_required(login_url="accounts:login")
+@require_GET
 def listing_photo(request, pk):
     if not request.user.is_active or request.user.is_staff or request.user.role != User.Role.OWNER:
         return HttpResponseForbidden("This page is available to active owners only.")

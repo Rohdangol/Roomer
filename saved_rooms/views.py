@@ -8,7 +8,8 @@ from django.shortcuts import redirect, render
 from django.urls import Resolver404, resolve, reverse
 from django.views.decorators.http import require_GET, require_POST
 
-from accounts.room_search import search_rooms
+from listings.services import tenant_readable_listings
+from rentals.models import AgreementTerms
 from .models import SavedRoom
 from .services import remove_saved_room, require_tenant, save_room
 
@@ -30,10 +31,47 @@ def return_destination(value):
 @require_GET
 def saved_rooms(request):
     require_tenant(request.user)
-    records = SavedRoom.objects.filter(tenant=request.user)
+    records = SavedRoom.objects.filter(tenant=request.user).select_related("listing__owner", "listing__published_revision")
     page = Paginator(records, 6).get_page(request.GET.get("page"))
-    visible = {room.pk: room for room in search_rooms({}, tenant=request.user).filter(pk__in=[record.listing_id for record in page])}
-    entries = [{"listing": visible.get(record.listing_id), "listing_id": record.listing_id} for record in page]
+    ids = [record.listing_id for record in page]
+    visible = {room.pk: room for room in tenant_readable_listings(request.user).filter(pk__in=ids).prefetch_related("published_revision__photos")}
+    # The actor's sent agreement is an independent authorization to retained terms,
+    # not permission to expose the listing's current hidden revision.
+    historical = {}
+    for terms in AgreementTerms.objects.filter(agreement__tenant=request.user,
+            agreement__listing_id__in=ids, sent_at__isnull=False).select_related("agreement").prefetch_related(
+            "listing_revision__photos").order_by("-agreement__created_at", "-version"):
+        historical.setdefault(terms.agreement.listing_id, terms)
+    entries = []
+    for record in page:
+        room = visible.get(record.listing_id)
+        entry = {"listing_id": record.listing_id, "save_target": {"pk": record.listing_id, "is_saved": True},
+            "status": "Unavailable / restricted", "can_request": False}
+        if room is not None:
+            revision = room.published_revision
+            photo = next(iter(revision.photos.all()), None)
+            entry.update(title=revision.title, location=revision.location_display, rent=revision.monthly_rent,
+                photo_url=reverse("accounts:tenant_photo", args=[photo.pk]) if photo else "",
+                detail_url=reverse("accounts:room_details", args=[room.pk]),
+                status=room.get_listing_status_display(), can_request=room.listing_status == "available")
+        else:
+            hidden = record.listing
+            # Explain the safe availability category without returning hidden content.
+            if hidden.archive_source != "admin" and hidden.owner.is_active:
+                if hidden.archived_at or hidden.listing_status == "inactive":
+                    entry["status"] = "Inactive / unpublished"
+                elif not hidden.published_revision_id:
+                    entry["status"] = "Unpublished"
+            terms = historical.get(record.listing_id)
+            if terms:
+                snapshot = terms.listing_snapshot
+                photo = next(iter(terms.listing_revision.photos.all()), None)
+                entry.update(title=snapshot.get("title", "Agreement room"),
+                    location=", ".join(value for value in (snapshot.get("locality"), snapshot.get("city")) if value),
+                    rent=terms.monthly_rent, historical=True,
+                    photo_url=reverse("accounts:rental_photo", args=["agreement", terms.agreement_id, photo.pk]) if photo else "",
+                    agreement_url=reverse("accounts:agreement_details", args=[terms.agreement_id]))
+        entries.append(entry)
     return render(request, "accounts/saved_rooms.html", {"page_obj": page, "entries": entries, "page_numbers": page.paginator.get_elided_page_range(page.number)})
 
 

@@ -2,7 +2,8 @@
 {% load static %}
 {% block admin_title %}Listings | Roomer Admin{% endblock %}
 {% block body_class %}roomer-public admin-dashboard-page admin-listings-page{% endblock %}
-{% block styles %}<link rel="stylesheet" href="{% static 'accounts/admin_dashboard.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_listings.css' %}"><link rel="stylesheet" href="{% static 'accounts/admin_users.css' %}"><link rel="stylesheet" href="{% static 'accounts/admin_listings.css' %}">{% endblock %}
+{% block styles %}{% endblock %}
+{% block css_scope %}roomer-core css-admin-dashboard css-admin-listings css-admin-users css-owner-listings{% endblock %}
 {% block content %}
 <section class="admin-container admin-users-content" aria-labelledby="listings-title"><h1 id="listings-title">Listings</h1><p class="admin-users-intro">Monitor room listings across Roomer.</p>
 {% if filtered_owner %}<p>Listings owned by {{ filtered_owner.full_name|default:filtered_owner.email }}. <a href="{% url 'accounts:admin_listings' %}">Show all owners</a></p>{% endif %}

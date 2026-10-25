@@ -47,7 +47,11 @@ class RentalRequest(models.Model):
 
 class RentalAgreement(models.Model):
     class Status(models.TextChoices):
-        PENDING = "pending", "Pending"
+        PENDING = "pending", "Legacy pending"
+        DRAFT = "draft", "Draft"
+        AWAITING_TENANT = "awaiting_tenant", "Awaiting Tenant"
+        CHANGES_REQUESTED = "changes_requested", "Changes Requested"
+        PENDING_ADMIN = "pending_admin", "Pending Admin Approval"
         SCHEDULED = "scheduled", "Scheduled"
         ACTIVE = "active", "Active"
         COMPLETED = "completed", "Completed"
@@ -57,20 +61,24 @@ class RentalAgreement(models.Model):
     tenant = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="tenant_agreements")
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="owner_agreements")
     current_terms = models.ForeignKey("AgreementTerms", on_delete=models.PROTECT, null=True, blank=True, related_name="current_for")
-    status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
+    status = models.CharField(max_length=24, choices=Status.choices, default=Status.DRAFT)
+    workflow_version = models.PositiveSmallIntegerField(default=2)
+    release_status = models.CharField(max_length=16, default="inactive", choices=[("available", "Available"), ("inactive", "Inactive")])
     created_at = models.DateTimeField(auto_now_add=True)
     activated_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     completed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name="completed_agreements")
 
     class Meta:
+        permissions = [("approve_rentalagreement", "Can approve or return rental agreements")]
         ordering = ("-created_at", "-pk")
         constraints = [
-            # This version forbids advance bookings, including disjoint date intervals.
-            models.UniqueConstraint(fields=["listing"], condition=Q(status__in=["scheduled", "active"]), name="agreement_one_binding_per_listing"),
-            models.CheckConstraint(condition=Q(status__in=["pending", "scheduled", "active", "completed"]), name="agreement_valid_status"),
-            models.CheckConstraint(condition=Q(status="completed", completed_at__isnull=False, completed_by__isnull=False) | Q(status__in=["pending", "scheduled", "active"], completed_at__isnull=True, completed_by__isnull=True), name="agreement_completion_consistent"),
-            models.CheckConstraint(condition=Q(status__in=["pending", "scheduled"], activated_at__isnull=True) | Q(status__in=["active", "completed"], activated_at__isnull=False), name="agreement_activation_consistent"),
+            # New workflows reserve from acceptance; legacy pending records are not converted.
+            models.UniqueConstraint(fields=["listing"], condition=Q(workflow_version=2, status__in=["draft", "awaiting_tenant", "changes_requested", "pending_admin", "scheduled", "active"]) | Q(workflow_version=1, status__in=["scheduled", "active"]), name="agreement_one_binding_per_listing"),
+            models.CheckConstraint(condition=Q(status__in=["pending", "draft", "awaiting_tenant", "changes_requested", "pending_admin", "scheduled", "active", "completed"]), name="agreement_valid_status"),
+            models.CheckConstraint(condition=Q(workflow_version__in=[1, 2]), name="agreement_valid_workflow"),
+            models.CheckConstraint(condition=Q(status="completed", completed_at__isnull=False) & (Q(workflow_version=2) | Q(completed_by__isnull=False)) | (~Q(status="completed") & Q(completed_at__isnull=True, completed_by__isnull=True)), name="agreement_completion_consistent"),
+            models.CheckConstraint(condition=(Q(status="active", activated_at__isnull=False) | Q(status="completed") | (~Q(status__in=["active", "completed"]) & Q(activated_at__isnull=True))), name="agreement_activation_consistent"),
         ]
         indexes = [models.Index(fields=["owner", "status"]), models.Index(fields=["tenant", "status"])]
 
@@ -92,11 +100,11 @@ class AgreementTerms(models.Model):
     listing_revision = models.ForeignKey("listings.ListingRevision", on_delete=models.PROTECT)
     monthly_rent = models.DecimalField(max_digits=12, decimal_places=2)
     security_deposit = models.DecimalField(max_digits=12, decimal_places=2)
-    payment_due_day = models.PositiveSmallIntegerField()
+    payment_due_day = models.PositiveSmallIntegerField(null=True, blank=True)
     total_occupancy = models.PositiveSmallIntegerField()
     start_date = models.DateField()
-    end_date = models.DateField()
-    additional_terms = models.TextField()
+    end_date = models.DateField(null=True, blank=True)
+    additional_terms = models.TextField(blank=True)
     listing_snapshot = models.JSONField()
     tenant_snapshot = models.JSONField()
     owner_snapshot = models.JSONField()
@@ -104,6 +112,8 @@ class AgreementTerms(models.Model):
     sent_at = models.DateTimeField(null=True, blank=True)
     tenant_accepted_at = models.DateTimeField(null=True, blank=True)
     owner_accepted_at = models.DateTimeField(null=True, blank=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name="approved_agreement_versions")
 
     class Meta:
         ordering = ("version",)
@@ -113,15 +123,17 @@ class AgreementTerms(models.Model):
             models.CheckConstraint(condition=Q(monthly_rent__gt=0, security_deposit__gte=0), name="agreement_valid_amounts"),
             models.CheckConstraint(condition=Q(payment_due_day__gte=1, payment_due_day__lte=28), name="agreement_valid_due_day"),
             models.CheckConstraint(condition=Q(total_occupancy__gte=1), name="agreement_positive_occupancy"),
-            models.CheckConstraint(condition=Q(end_date__gt=models.F("start_date")), name="agreement_valid_dates"),
+            models.CheckConstraint(condition=Q(end_date__isnull=True, sent_at__isnull=True) | Q(end_date__gt=models.F("start_date")), name="agreement_valid_dates"),
             models.CheckConstraint(condition=Q(tenant_accepted_at__isnull=True) | Q(sent_at__isnull=False), name="agreement_confirmation_after_send"),
-            models.CheckConstraint(condition=Q(owner_accepted_at__isnull=True) | Q(tenant_accepted_at__isnull=False, sent_at__isnull=False), name="agreement_finalization_after_confirmation"),
+            models.CheckConstraint(condition=Q(owner_accepted_at__isnull=True) | Q(sent_at__isnull=False), name="agreement_owner_consent_after_send"),
+            models.CheckConstraint(condition=Q(sent_at__isnull=True) | Q(payment_due_day__isnull=False, end_date__isnull=False) & ~Q(additional_terms=""), name="agreement_sent_terms_complete"),
+            models.CheckConstraint(condition=Q(approved_at__isnull=True, approved_by__isnull=True) | Q(approved_at__isnull=False, approved_by__isnull=False, owner_accepted_at__isnull=False, tenant_accepted_at__isnull=False, sent_at__isnull=False), name="agreement_approval_requires_consent"),
         ]
 
     def clean(self):
         self.additional_terms = self.additional_terms.strip()
-        if not self.additional_terms:
-            raise ValidationError({"additional_terms": "Enter the agreed terms."})
+        if self.sent_at and not self.additional_terms:
+            raise ValidationError({"additional_terms": "Enter the agreed terms before sending."})
         if self.listing_revision_id and self.agreement_id and (
             self.listing_revision.listing_id != self.agreement.listing_id or self.listing_revision.approval_status != "approved"):
             raise ValidationError("Agreement content must come from an approved revision of this listing.")
@@ -133,3 +145,25 @@ class AgreementTerms(models.Model):
 
     def __str__(self):
         return f"Agreement #{self.agreement_id} version {self.version}"
+
+
+class AgreementReview(models.Model):
+    class Decision(models.TextChoices):
+        TENANT_CHANGES = "tenant_changes", "Tenant requested changes"
+        ADMIN_RETURN = "admin_return", "Admin returned for revision"
+        ADMIN_APPROVE = "admin_approve", "Admin approved"
+
+    terms = models.ForeignKey(AgreementTerms, on_delete=models.PROTECT, related_name="reviews")
+    reviewer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    decision = models.CharField(max_length=20, choices=Decision.choices)
+    reason = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("created_at", "pk")
+        constraints = [models.CheckConstraint(condition=Q(decision="admin_approve", reason="") | Q(decision__in=["tenant_changes", "admin_return"]) & ~Q(reason=""), name="agreement_review_reason_required")]
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            raise ValidationError("Agreement reviews are immutable history.")
+        super().save(*args, **kwargs)

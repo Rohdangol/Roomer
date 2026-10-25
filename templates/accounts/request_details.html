@@ -1,12 +1,45 @@
 {% extends 'accounts/base_role.html' %}
 {% load static %}
 {% block title %}Rental Request | Roomer{% endblock %}
-{% block body_class %}roomer-public tenant-home-page tenant-requests-page{% endblock %}
-{% block styles %}<link rel="stylesheet" href="{% static 'accounts/tenant_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/tenant_requests.css' %}"><link rel="stylesheet" href="{% static 'accounts/rental_workflows.css' %}">{% endblock %}
+{% block body_class %}roomer-public tenant-home-page tenant-requests-page request-details-page{% endblock %}
+{% block styles %}{% endblock %}
+{% block css_scope %}roomer-core css-rental-workflows-5 css-request-details css-tenant-home css-tenant-requests{% endblock %}
+{% block scripts %}<script src="{% static 'accounts/request_cancel.js' %}" defer></script>{% endblock %}
 {% block content %}
-<div class="requests-content"><a class="request-back" href="{% url 'accounts:my_requests' %}">Back to My Requests</a><h1>Rental Request</h1>
-{% include 'accounts/_rental_request_card.html' %}
-<section class="request-progress-section"><h2>Request Status</h2><p>{{ application.get_status_display }}</p><ol class="request-progress"><li>Request Sent: {{ application.requested_at }}</li><li>Owner Review{% if application.status == 'pending' %}: Awaiting review{% endif %}</li><li>Decision: {% if application.responded_at %}{{ application.get_status_display }} on {{ application.responded_at }}{% else %}Pending{% endif %}</li></ol></section>
-<div class="request-detail-columns"><section><h2>Request Details</h2><dl><dt>Move-in Date</dt><dd>{{ application.preferred_move_in }}</dd><dt>Total Occupancy (including you)</dt><dd>{{ application.total_occupancy }}</dd></dl><h3>Message</h3><p class="rental-message">{{ application.message }}</p></section><section><h2>Room Owner</h2><p>{{ application.listing.owner.full_name|default:'Room Owner' }}</p></section></div>
-{% include 'accounts/_rental_request_actions.html' %}
-</div>{% endblock %}
+<div class="requests-content">
+    {% block request_back %}<a class="request-back" href="{% url 'accounts:my_requests' %}">&larr; Back to My Requests</a>{% endblock %}
+    <h1>Rental Request</h1>
+    <dl class="request-detail-metadata">
+        <div><dt>Request ID:</dt><dd>#Req{{ application.pk }}</dd></div>
+        <div><dt>Requested On:</dt><dd>{{ application.requested_at|date:'M j, Y' }}</dd></div>
+        <div><dt>Request Status</dt><dd><span class="request-status-pill">{{ application.get_status_display }}</span></dd></div>
+    </dl>
+    {# Use the retained requested revision and participant-authorized photo route. #}
+    <article class="request-room-summary">
+        <div class="request-room-photo">{% with photo=revision.photos.all|first %}{% if photo %}<img src="{% url 'accounts:rental_photo' 'request' application.pk photo.pk %}" alt="{{ revision.title }}">{% else %}<span>Room photo unavailable</span>{% endif %}{% endwith %}</div>
+        <div class="request-room-content">
+            <div class="request-room-price"><strong>Rs {{ revision.monthly_rent|floatformat:'-2' }}/month</strong><span class="request-status-pill">{{ revision.get_room_type_display }}</span></div>
+            <h2>{{ revision.title }}</h2>
+            <p class="request-room-location"><img src="{% static 'accounts/images/location.png' %}" width="16" height="16" alt="">{{ revision.location_display }}</p>
+            <ul class="request-room-amenities" aria-label="Amenities">{% for link in revision.amenity_links.all %}<li>{{ link.amenity.name }}</li>{% empty %}<li>No amenities listed</li>{% endfor %}</ul>
+            {% block request_room_link %}{% if can_view_room %}<a class="request-view-room" href="{% url 'accounts:room_details' application.listing_id %}">View Room</a>{% else %}<span class="request-room-unavailable">Room is no longer publicly available</span>{% endif %}{% endblock %}
+        </div>
+    </article>
+    <section class="request-status-section" aria-labelledby="request-status-title">
+        <h2 id="request-status-title">Request Status</h2>
+        {# No separate review-start timestamp exists; do not invent an intermediate status. #}
+        <ol class="request-status-timeline">
+            <li class="is-complete"><span class="timeline-dot" aria-hidden="true"></span><strong>Request Sent</strong><small>{{ application.requested_at|date:'M j, Y' }}</small></li>
+            <li{% if application.status == 'accepted' or application.status == 'rejected' %} class="is-complete"{% elif application.status == 'pending' %} aria-current="step"{% endif %}><span class="timeline-dot" aria-hidden="true"></span><strong>Owner Review</strong><small>{% if application.status == 'pending' %}Awaiting review{% elif application.status == 'cancelled' %}Cancelled before decision{% else %}Reviewed{% endif %}</small></li>
+            <li{% if application.responded_at %} class="is-complete"{% endif %}><span class="timeline-dot" aria-hidden="true"></span><strong>Decision</strong><small>{% if application.responded_at %}{{ application.get_status_display }} &middot; {{ application.responded_at|date:'M j, Y' }}{% else %}Pending{% endif %}</small></li>
+        </ol>
+    </section>
+    <div class="request-detail-columns">
+        <section><h2>Request Details</h2><dl class="request-preferences"><div><dt>Preferred Move-in Date</dt><dd>{{ application.preferred_move_in|date:'F j, Y' }}</dd></div><div><dt>Preferred Occupancy</dt><dd>{{ application.total_occupancy }} {{ application.total_occupancy|pluralize:'person,people' }} <small>({% if owner_view %}including tenant{% else %}including you{% endif %})</small></dd></div></dl><h3>Message to Owner</h3><p class="rental-message">{{ application.message|default:'No message provided.' }}</p></section>
+        {% block request_participant %}<section class="request-owner-card" aria-label="Room owner">
+            <div class="request-owner-summary"><img class="request-owner-avatar" src="{% static 'accounts/images/profile.png' %}" width="104" height="104" alt=""><div><h2>{{ application.listing.owner.full_name|default:'Room Owner' }}</h2><p>Room Owner</p><p>{{ application.listing.owner.phone_number|default:'Phone number not provided' }}</p><p class="request-owner-member">Member Since {{ application.listing.owner.date_joined|date:'Y' }}</p></div>{% if owner_verified %}<span class="request-owner-badge">{% include 'core/_verified_icon.html' %}Verified</span>{% endif %}</div>
+        </section>{% endblock %}
+    </div>
+    {% include 'accounts/_rental_request_actions.html' %}
+</div>
+{% endblock %}

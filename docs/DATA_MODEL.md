@@ -172,7 +172,7 @@ Purpose: store room-matching preferences; location, maximum budget, room type an
 
 PreferredAmenity: id; `preference` FK(TenantPreference), required, CASCADE; `amenity` FK(Amenity), required, PROTECT; unique `(preference, amenity)`. Proposed related names: preference.amenity_links, amenity.preference_links. Zero rows means no amenity preference; no fake None amenity. Save required factors and optional amenity selection together transactionally.
 
-The preference record can be absent before setup; saving requires the four non-amenity factors. Tenants manage only their own preferences. No profile join is needed. Optional amenities overrides the source's earlier compulsory-selection statement. Scoring with no amenity preference remains unresolved; do not invent a zero penalty or weight redistribution.
+The preference record can be absent before setup; saving requires the four non-amenity factors. Tenants manage only their own preferences. No profile join is needed. Optional amenities overrides the source's earlier compulsory-selection statement. Approved scoring gives full amenity credit when none are selected; see RECOMMENDATIONS.md.
 
 ## Notifications — proposed app `notifications`
 
@@ -227,7 +227,7 @@ Confirmed: owner can request a suggested rent; persist amount, method/model vers
 
 Future RentEstimate fields: listing FK(PROTECT), owner FK(User, PROTECT), proposed input_revision FK(ListingRevision, PROTECT), estimated_rent DecimalField(12, 2), estimation_method CharField, model_version CharField (optional when no model), created_at DateTimeField. Lengths/method identifiers are deferred. A revision reference prevents displaying an estimate calculated for different listing details. Do not duplicate an estimate as a manually editable recommended_rent; a nullable read-only derived suggestion satisfies the ER's display intent.
 
-Room matching is separate: `S = 0.30L + 0.30B + 0.15A + 0.15R + 0.10F`. Scores are dynamic, not rent amounts. Factor normalization/distance/budget/amenity scoring formulas are not supplied and remain unresolved; do not present the weighted expression alone as an implemented algorithm.
+Room matching is separate: `S = 0.30L + 0.30B + 0.15A + 0.15R + 0.10F`. Scores are dynamic, not rent amounts. The subsequently approved scoring policy is implemented dynamically; see RECOMMENDATIONS.md. R explicitly means Room Type, not Rules. No scoring fields or migrations are needed.
 
 ## Deletion contract
 
@@ -299,3 +299,33 @@ TENANT_VERIFICATION_HANDOFF.md. Shru owns accounts migrations. Existing
 OwnerVerification is preserved; its separate history-backfill proposal remains
 deferred. Tenant government ID is optional for access; email proof follows
 successful link confirmation only, never registration/login.
+
+
+## Agreement consent/approval extension (workflow v2)
+
+See RENTAL_WORKFLOWS.md for the current transition contract, replacing Owner
+finalization for new agreements. Migration owner: Shru (authorized shared change).
+
+- RentalAgreement: workflow_version PositiveSmallInteger (legacy 1, new default
+  2); status CharField(24): legacy pending, draft, awaiting_tenant,
+  changes_requested, pending_admin, scheduled, active, completed; release_status
+  CharField(16), available/inactive, captures pre-reservation availability.
+  Existing user/listing/request relationships remain PROTECT. Unique binding
+  listing constraint covers all non-completed v2 states and legacy scheduled/active.
+- AgreementTerms: end_date and payment_due_day nullable only to permit incomplete
+  unsent drafts; additional_terms may be blank only before sending. Sending must
+  supply valid required values. owner_accepted_at now records consent on send;
+  tenant_accepted_at records consent to that sent version. approved_at optional
+  DateTimeField and approved_by optional User FK(PROTECT) are paired and require
+  both consents. Snapshot fields and immutable version behavior are preserved.
+- AgreementReview: terms FK(PROTECT), reviewer User FK(PROTECT), decision
+  tenant_changes/admin_return/admin_approve, reason TextField (required for
+  changes/return), created_at server-written. Append-only inspection history;
+  no deletion/edit UI. Terms retain unique (agreement, version).
+- Completed v2 agreements may have no activated_at if downtime skipped the entire
+  rental period; completed_by may be null for scheduler completion. completed_at
+  remains required. Never fabricate a scheduler actor or historical activation.
+
+No existing agreement gains consent/approval in migration. Legacy data remains
+read-only for the new workflow pending an explicit migration policy; legacy
+active completion is preserved. New end dates are inclusive; legacy exclusive.

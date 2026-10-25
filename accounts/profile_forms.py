@@ -87,12 +87,39 @@ class RoomPreferenceForm(forms.ModelForm):
 
 
 class TextOnlyPreferenceForm(RoomPreferenceForm):
+    point_location = forms.CharField(required=False, widget=forms.HiddenInput)
+    resolved_label = forms.CharField(required=False, widget=forms.HiddenInput)
+    location_token = forms.CharField(required=False, widget=forms.HiddenInput)
+    point_source = forms.CharField(required=False, widget=forms.HiddenInput)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Home onboarding and Profile accept area text without map/coordinate inputs.
+        self.saved_location = self.instance.preferred_location.strip()
+        self.saved_coordinates = (self.instance.latitude, self.instance.longitude)
+        from .search_location import signed_place
+        # Coordinates are selection metadata, never visible numeric inputs.
         for name in ("latitude", "longitude", "coordinates_selected"):
-            self.fields.pop(name)
-        self.fields["preferred_location"].help_text = "Enter your preferred city or neighbourhood."
+            self.fields[name].widget = forms.HiddenInput()
+        if not self.is_bound and self.instance.latitude is not None and self.instance.longitude is not None:
+            self.initial.update(signed_place({"label": self.instance.preferred_location,
+                "latitude": self.instance.latitude, "longitude": self.instance.longitude}))
+        self.fields["preferred_location"].help_text = "Choose a suggestion to save a map point for recommendations."
+
+    def clean(self):
+        cleaned = super().clean()
+        from .search_location import selected_location
+        selected = selected_location({**cleaned, "q": cleaned.get("preferred_location", "")})
+        changed = cleaned.get("preferred_location", "").strip() != self.saved_location
+        if changed and not selected:
+            self.add_error("preferred_location", "Choose a location from the suggestions before saving a changed location.")
+        elif not selected and not changed and all(value is not None for value in self.saved_coordinates):
+            # Editing other preferences must not erase an unchanged saved point,
+            # including submissions without JavaScript selection metadata.
+            cleaned["latitude"], cleaned["longitude"] = self.saved_coordinates
+        elif cleaned.get("latitude") is not None and not selected:
+            self.add_error("preferred_location", "Choose a location from the suggestions.")
+        cleaned["coordinates_selected"] = selected
+        return cleaned
 
 
 class TenantIdentityForm(forms.ModelForm):

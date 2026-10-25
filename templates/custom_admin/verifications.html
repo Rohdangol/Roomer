@@ -2,7 +2,8 @@
 {% load static %}
 {% block admin_title %}Identity Verifications | Roomer Admin{% endblock %}
 {% block body_class %}roomer-public admin-dashboard-page{% endblock %}
-{% block styles %}<link rel="stylesheet" href="{% static 'accounts/admin_dashboard.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_listings.css' %}"><link rel="stylesheet" href="{% static 'accounts/admin_users.css' %}"><link rel="stylesheet" href="{% static 'accounts/admin_verifications.css' %}">{% endblock %}
+{% block styles %}{% endblock %}
+{% block css_scope %}roomer-core css-admin-dashboard css-admin-users css-admin-verifications css-owner-listings{% endblock %}
 {% block content %}
 <section class="admin-container admin-users-content"><a href="{% url 'accounts:admin' %}">&larr; Back to Admin Dashboard</a><h1>Identity Verifications</h1><p>Review identity submissions visible within your permissions. Email verification is separate.</p>
 <nav class="owner-filters" aria-label="Verification status">{% for value, label in status_filters %}<a href="?status={{ value }}&amp;role={{ role|urlencode }}&amp;q={{ query|urlencode }}"{% if status == value %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav>

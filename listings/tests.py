@@ -22,7 +22,7 @@ from .storage import validate_photo
 
 
 def valid_details():
-    return dict(title="Sunlit room", description="A quiet room.", city="Kathmandu", locality="Baneshwor", address="Test address", latitude="27.700000", longitude="85.300000", room_type="single_room", furnishing="furnished", monthly_rent="15000.00", security_deposit="5000.00", available_from=date(2026, 10, 12), maximum_occupants=2, cooking_allowed=True, visitors_allowed=True, smoking_allowed=False, pets_allowed=False)
+    return dict(title="Sunlit room", description="A quiet room.", city="Kathmandu", locality="Baneshwor", address="Test address", latitude="27.700000", longitude="85.300000", room_type="single_room", furnishing="furnished", monthly_rent="15000.00", security_deposit="5000.00", available_from=timezone.localdate(), maximum_occupants=2, cooking_allowed=True, visitors_allowed=True, smoking_allowed=False, pets_allowed=False)
 
 
 def image_upload(format="PNG", extension="png", animated=False):
@@ -68,7 +68,8 @@ class ListingWorkflowTests(TestCase):
         self.assertEqual(self.revision.reviewed_by, self.reviewer)
         self.assertIsNotNone(self.listing.published_at)
         self.assertEqual(list(published_listings()), [self.listing])
-        self.assertEqual(Notification.objects.get().user, self.owner)
+        self.assertEqual(Notification.objects.get(user=self.owner).user, self.owner)
+        self.assertTrue(Notification.objects.filter(user=self.reviewer).exists())
 
     def test_pending_and_rejected_edits_keep_approved_content_and_photos(self):
         self.publish()
@@ -185,6 +186,7 @@ class ListingWorkflowTests(TestCase):
     def test_failed_notification_rolls_back_approval(self):
         add_listing_photo(self.owner, self.revision.pk, image_upload(), 1)
         submit_listing_revision(self.owner, self.revision.pk)
+        existing_notice_ids = set(Notification.objects.values_list("pk", flat=True))
         with patch("listings.services.create_notification", side_effect=ValidationError("Notification failed")):
             with self.assertRaises(ValidationError):
                 review_listing_revision(self.reviewer, self.revision.pk, "approved")
@@ -192,7 +194,8 @@ class ListingWorkflowTests(TestCase):
         self.revision.refresh_from_db()
         self.assertIsNone(self.listing.published_revision_id)
         self.assertEqual(self.revision.approval_status, "pending")
-        self.assertFalse(Notification.objects.exists())
+        self.assertEqual(set(Notification.objects.values_list("pk", flat=True)), existing_notice_ids)
+        self.assertFalse(Notification.objects.filter(user=self.owner).exists())
 
     def test_pending_uniqueness_and_draft_update_rollback(self):
         self.publish()
@@ -203,10 +206,12 @@ class ListingWorkflowTests(TestCase):
         self.assertEqual(draft.title, self.revision.title)
         submit_listing_revision(self.owner, draft.pk)
         next_draft = create_listing_draft(self.owner, self.listing.pk)
-        with self.assertRaises(ValidationError):
-            submit_listing_revision(self.owner, next_draft.pk)
+        submit_listing_revision(self.owner, next_draft.pk)
+        draft.refresh_from_db()
+        self.assertEqual(draft.approval_status, "superseded")
+        self.assertEqual(self.listing.revisions.filter(approval_status="pending").count(), 1)
         with self.assertRaises(IntegrityError), transaction.atomic():
-            ListingRevision.objects.filter(pk=next_draft.pk).update(approval_status="pending", submitted_at=timezone.now())
+            ListingRevision.objects.filter(pk=draft.pk).update(approval_status="pending", submitted_at=timezone.now())
 
     def test_admin_records_are_read_only(self):
         self.client.force_login(self.reviewer)

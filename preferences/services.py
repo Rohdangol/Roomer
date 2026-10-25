@@ -1,9 +1,29 @@
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 
 from listings.models import Amenity
 from .models import PreferredAmenity, TenantPreference
+
+
+@transaction.atomic
+def save_preference_location(actor, location, latitude, longitude):
+    """Explicit legacy-location setup preserves all other preferences under the user lock."""
+    if not actor.is_authenticated or not actor.is_active or actor.is_staff or actor.role != "tenant":
+        raise PermissionDenied("An active tenant account is required.")
+    get_user_model().objects.select_for_update().get(pk=actor.pk)
+    preference = TenantPreference.objects.filter(tenant=actor).first()
+    if preference is None:
+        raise ValidationError("Complete your Profile preferences first.")
+    details = {name: getattr(preference, name) for name in (
+        "preferred_location", "latitude", "longitude", "maximum_budget", "preferred_room_type", "preferred_furnishing")}
+    details.update(preferred_location=location,
+        latitude=Decimal(str(latitude)).quantize(Decimal("0.000001")),
+        longitude=Decimal(str(longitude)).quantize(Decimal("0.000001")))
+    return save_tenant_preference(actor, details,
+        preference.amenity_links.values_list("amenity_id", flat=True), coordinates_selected=True)
 
 
 @transaction.atomic

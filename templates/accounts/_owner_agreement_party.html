@@ -1,0 +1,3 @@
+{% load static %}
+{# Contact/name values are the version's retained snapshot; no private photo URL is exposed. #}
+<div class="owner-agreement-party-card"><img class="owner-agreement-party-avatar" src="{% static 'accounts/images/profile.png' %}" width="104" height="104" alt=""><div><div class="owner-agreement-party-heading"><h3>{{ party.full_name|default:'Name not provided' }}</h3>{% if verified %}<span class="owner-agreement-verified">{% include 'core/_verified_icon.html' %}Verified</span>{% endif %}</div><p>{{ party_role }}</p><p>{{ party.phone_number|default:'Phone not provided' }}</p></div></div>

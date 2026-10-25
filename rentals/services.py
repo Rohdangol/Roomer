@@ -26,8 +26,8 @@ def validate_request_listing(listing, move_in, occupancy):
         or revision.approval_status != "approved" or not listing.owner.is_active
         or listing.owner.is_staff or listing.owner.role != "owner" or owner_needs_verification(listing.owner)):
         raise ValidationError("This listing is no longer available for rental requests.")
-    if RentalAgreement.objects.filter(listing=listing, status__in=["scheduled", "active"]).exists():
-        raise ValidationError("This listing already has a binding rental agreement.")
+    if RentalAgreement.objects.filter(listing=listing).exclude(status__in=["completed", "pending"]).exists():
+        raise ValidationError("This listing already has a reserved or active rental agreement.")
     if move_in < max(timezone.localdate(), revision.available_from):
         raise ValidationError("Move-in must be today or later and on or after the listing availability date.")
     if not 1 <= occupancy <= revision.maximum_occupants:
@@ -62,6 +62,11 @@ def decide_request(actor, request_id, action):
     listing_id = records.values_list("listing_id", flat=True).get(pk=request_id)
     listing = RoomListing.objects.select_for_update().get(pk=listing_id)
     application = records.select_for_update().get(pk=request_id)
+    if action == "accept" and application.status == "accepted":
+        # Retried clicks return the same draft; they never reserve a second room/version.
+        from .models import RentalAgreement
+        if RentalAgreement.objects.filter(rental_request=application).exists():
+            return application
     if application.status != "pending":
         raise ValidationError("This request has already changed. Only pending requests can be updated.")
     if action not in ("cancel", "accept", "reject"):
@@ -73,7 +78,10 @@ def decide_request(actor, request_id, action):
     application.status = {"cancel": "cancelled", "accept": "accepted", "reject": "rejected"}[action]
     application.responded_at = timezone.now()
     application.save(update_fields=["status", "responded_at"])
+    if action == "accept":
+        from .agreement_services import create_draft_locked
+        create_draft_locked(actor, listing, application)
     recipient = listing.owner if action == "cancel" else application.tenant
     create_notification(recipient, f"Rental request {application.status}", f"Request #{application.pk} for listing #{listing.pk} has been {application.status}.")
-    # Acceptance is a request decision only; it does not reserve or occupy the listing.
+    # Acceptance, reservation and draft creation commit together under the listing lock.
     return application

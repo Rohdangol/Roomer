@@ -92,7 +92,7 @@ class RequestWorkflowTests(RentalFixtures, TestCase):
         self.assertEqual(response.context["page_obj"].paginator.count, 2)
         self.assertEqual(response.context["status_filters"][0]["count"], 2)
 
-    def test_decisions_require_pending_owned_requests_and_do_not_occupy(self):
+    def test_decisions_require_owned_requests_and_reserve_once(self):
         application = self.submit()
         with self.assertRaises(RentalRequest.DoesNotExist):
             decide_request(self.other_owner, application.pk, "accept")
@@ -100,8 +100,10 @@ class RequestWorkflowTests(RentalFixtures, TestCase):
             decide_request(self.tenant, application.pk, "accept")
         decide_request(self.owner, application.pk, "accept")
         self.listing.refresh_from_db()
-        self.assertEqual(self.listing.listing_status, "available")
-        for actor, action in ((self.owner, "reject"), (self.owner, "accept"), (self.tenant, "cancel")):
+        self.assertEqual(self.listing.listing_status, "reserved")
+        decide_request(self.owner, application.pk, "accept")
+        self.assertEqual(RentalAgreement.objects.filter(rental_request=application).count(), 1)
+        for actor, action in ((self.owner, "reject"), (self.tenant, "cancel")):
             with self.assertRaises(ValidationError):
                 decide_request(actor, application.pk, action)
         with self.assertRaises(ValidationError):

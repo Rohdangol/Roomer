@@ -27,7 +27,7 @@ class LoginViewTests(TestCase):
         self.assertContains(response, "csrfmiddlewaretoken")
         self.assertContains(response, reverse("accounts:register"))
         self.assertContains(response, "Welcome Back!")
-        self.assertContains(response, "/static/accounts/login.css")
+        self.assertContains(response, "/static/core/roomer.css")
         self.assertNotContains(response, "Forgot Password")
 
     def test_successful_login_creates_session_and_ignores_next(self):

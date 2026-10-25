@@ -2,7 +2,8 @@
 {% load static %}
 {% block admin_title %}Agreement Details | Roomer{% endblock %}
 {% block body_class %}roomer-public admin-dashboard-page admin-agreement-details-page{% endblock %}
-{% block styles %}<link rel="stylesheet" href="{% static 'accounts/admin_dashboard.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_request_details.css' %}"><link rel="stylesheet" href="{% static 'accounts/owner_agreement_details.css' %}"><link rel="stylesheet" href="{% static 'accounts/admin_agreement_details.css' %}"><link rel="stylesheet" href="{% static 'accounts/rental_workflows.css' %}">{% endblock %}
+{% block styles %}{% endblock %}
+{% block css_scope %}roomer-core css-admin-agreement-details css-admin-dashboard css-owner-agreement-details-2 css-owner-home css-owner-request-details css-rental-workflows-3{% endblock %}
 {% block content %}
 <div class="owner-home owner-container owner-request-detail owner-agreement-detail">
     <a class="request-back" href="{% url 'accounts:admin_agreements' %}">&larr; Back to Agreements</a>
@@ -33,6 +34,6 @@
     <section class="agreement-detail-section" aria-labelledby="agreement-confirmation-title"><h2 id="agreement-confirmation-title">Agreement Confirmation</h2>
         {% block agreement_confirmation %}{% include 'accounts/_agreement_confirmations.html' %}{% endblock %}
     </section>
-    {% block agreement_finalization %}<section class="agreement-review-section" aria-labelledby="finalization-title"><h2 id="finalization-title">Finalization Summary</h2><p>Owner finalization: {{ terms.owner_accepted_at|default:'Not finalized' }}.</p>{% include 'accounts/_agreement_actions.html' %}</section>{% endblock %}
+    {% block agreement_finalization %}<section class="agreement-review-section" aria-labelledby="finalization-title"><h2 id="finalization-title">Approval Review</h2><p>Owner consent: {{ terms.owner_accepted_at|default:'Not confirmed' }}.</p>{% include 'accounts/_agreement_actions.html' %}</section>{% endblock %}
 </div>
 {% endblock %}

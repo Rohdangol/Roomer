@@ -9,6 +9,11 @@ from . import verification_views, notification_views, agreement_views, profile_v
 app_name = "accounts"
 
 urlpatterns = [
+    path("tenant/locations/suggestions/", listing_geocoding.tenant_suggestions, name="tenant_location_suggestions"),
+    path("tenant/agreements/<int:pk>/changes/", rental_agreement_views.agreement_action, {"action": "changes"}, name="agreement_changes"),
+    path("admin/agreements/<int:pk>/approve/", rental_agreement_views.agreement_action, {"role": "admin", "action": "approve"}, name="admin_agreement_approve"),
+    path("admin/agreements/<int:pk>/return/", rental_agreement_views.agreement_action, {"role": "admin", "action": "return"}, name="admin_agreement_return"),
+    path("tenant/password/change/", profile_views.tenant_password_change, name="tenant_password_change"),
     path("rental-photos/<str:kind>/<int:pk>/<int:photo_id>/", rental_views.rental_photo, name="rental_photo"),
     path("owner/listings/find-location/", listing_geocoding.find_location, name="owner_find_location"),
     path("verify-email/resend/", verification_views.resend_email, name="resend_email"),
@@ -40,6 +45,7 @@ urlpatterns = [
     path("owner/password/change/", owner_profile_views.password_change, name="owner_password_change"),
     path("owner/profile/picture/", owner_profile_views.profile_picture, name="owner_profile_picture"),
     path("owner/", owner_views.home, name="owner"),
+    path("owner/requests/<int:pk>/tenant-photo/", owner_views.request_tenant_photo, name="owner_request_tenant_photo"),
     path("owner/agreements/", rental_agreement_views.agreement_list, {"role": "owner"}, name="owner_agreements"),
     path("owner/requests/<int:pk>/agreement/prepare/", rental_agreement_views.agreement_prepare, name="owner_agreement_prepare"),
     path("owner/agreements/<int:pk>/", rental_agreement_views.agreement_detail, {"role": "owner"}, name="owner_agreement_details"),

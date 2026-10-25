@@ -42,9 +42,9 @@ class TenantHomeTests(TestCase):
         response = self.client.get(self.url)
         self.assertTemplateUsed(response, "accounts/tenant_home.html")
         self.assertTemplateUsed(response, "accounts/base_role.html")
-        for text in ("No rooms available yet", "Recommended Rooms", "Fresh on Roomer", "Browse by Neighbourhood", "Personalized recommendations are not available yet", "Roommate discovery is outside"):
+        for text in ("No recently published rooms", "Recommended Rooms", "Fresh on Roomer", "Browse by Neighbourhood", "Complete Preferences"):
             self.assertContains(response, text)
-        self.assertContains(response, 'type="button" disabled')
+        self.assertNotContains(response, 'class="roommate-banner"')
         self.assertNotContains(response, 'href="#"')
         self.assertNotContains(response, "Verified")
         self.assertEqual(response.context["latest_rooms"], [])
@@ -56,7 +56,6 @@ class TenantHomeTests(TestCase):
         self.assertEqual(len(response.context["latest_rooms"]), 3)
         self.assertEqual([listing.published_revision.title for listing in response.context["latest_rooms"]], ["Room number 3", "Room number 2", "Room number 1"])
         self.assertEqual(response.context["neighbourhoods"][0]["room_count"], 4)
-        self.assertContains(response, "4 available rooms")
         self.assertNotContains(response, "Room number 0")
 
     def test_location_search_and_area_shortcuts_use_published_fields(self):
@@ -70,7 +69,7 @@ class TenantHomeTests(TestCase):
         self.assertContains(response, "Kathmandu room")
         self.assertNotContains(response, "Lalitpur room")
         response = self.client.get(self.url, {"q": "No such area"})
-        self.assertContains(response, "No rooms match this location")
+        self.assertContains(response, "Choose a location from the suggestions.")
 
     def test_unpublished_archived_inactive_and_suspended_rooms_are_hidden(self):
         draft = create_listing(self.owner, **valid_details())

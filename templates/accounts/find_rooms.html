@@ -2,41 +2,54 @@
 {% load static %}
 {% block title %}Find Rooms | Roomer{% endblock %}
 {% block body_class %}roomer-public tenant-home-page find-rooms-page{% endblock %}
-{% block styles %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""><link rel="stylesheet" href="{% static 'accounts/tenant_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/find_rooms.css' %}"><link rel="stylesheet" href="{% static 'accounts/amenity_choices.css' %}">{% endblock %}
-{% block scripts %}<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script><script src="{% static 'accounts/room_map.js' %}" defer></script><script src="{% static 'accounts/find_rooms_map.js' %}?v=3" defer></script><script src="{% static 'accounts/tenant_home.js' %}" defer></script>{% endblock %}
+{% block styles %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">{% endblock %}
+{% block css_scope %}roomer-core css-amenity-choices css-find-rooms css-location-autocomplete css-tenant-home{% endblock %}
+{% block scripts %}<script src="{% static 'accounts/location_autocomplete.js' %}" defer></script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script><script src="{% static 'accounts/room_map.js' %}" defer></script><script src="{% static 'accounts/find_rooms_map.js' %}?v=4" defer></script><script src="{% static 'accounts/tenant_home.js' %}" defer></script><script src="{% static 'accounts/room_rows.js' %}" defer></script>{% endblock %}
 {% block content %}
 <div class="tenant-home">
 <section class="tenant-hero tenant-hero-photo" style="--tenant-hero-image: url('{% static 'accounts/images/Tenant_hero.jpg' %}');"><h1>Find your next room.</h1><p class="hero-intro">Search and filter rooms based on what matters to you.</p></section>
 {# One GET form keeps the top search and sidebar filters synchronized without JavaScript. #}
-<form id="room-search" method="get" action="{% url 'accounts:find_rooms' %}">
-<div class="tenant-search-panel"><div class="search-controls"><label class="search-label" for="hero-location">Where do you want to live?</label><img class="search-location-icon" src="{% static 'accounts/images/location.png' %}" width="18" height="18" alt=""><input id="hero-location" name="q" type="search" maxlength="255" value="{{ form.q.value|default_if_none:'' }}" placeholder="Where do you want to live?"><button type="submit">Search</button></div></div>
-</form>
-<div class="find-layout">
+<form id="room-search" data-location-search data-csrf="{{ csrf_token }}" data-location-url="{% url 'accounts:tenant_location_suggestions' %}" method="get" action="{% url 'accounts:find_rooms' %}">
+<div class="tenant-search-panel find-container"><div class="search-controls"><label class="search-label" for="hero-location">Where do you want to live?</label><img class="search-location-icon" src="{% static 'accounts/images/location.png' %}" width="18" height="18" alt=""><div class="location-autocomplete"><input id="hero-location" name="q" type="search" maxlength="255" value="{{ form.q.value|default_if_none:'' }}" placeholder="Where do you want to live?"></div><button type="submit">Search</button></div></div>
+{% if setup_location %}<input type="hidden" name="setup_location" value="1">{% endif %}</form>
+<div class="find-layout find-container">
 <aside class="room-filters" aria-labelledby="filter-heading">
-<div class="filter-heading"><h2 id="filter-heading">Filter</h2><a href="{% url 'accounts:find_rooms' %}">Reset</a></div>
-{{ form.area }}{{ form.city }}{{ form.latitude }}{{ form.longitude }}
+<div class="filter-heading"><h2 id="filter-heading">Filter</h2><a href="{% url 'accounts:find_rooms' %}">Reset</a></div><p class="filter-scope-help">Filters and radius update Recommended Rooms only. All Available Rooms stays unfiltered.</p>
+{{ form.area }}{{ form.city }}{{ form.latitude }}{{ form.longitude }}{{ form.point_location }}{{ form.resolved_label }}{{ form.location_token }}{{ form.point_source }}
 {% if form.errors %}<div class="filter-errors" role="alert"><p>Please correct the filters below.</p>{{ form.non_field_errors }}{% for field in form %}{% for error in field.errors %}<p>{{ field.label }}: {{ error }}</p>{% endfor %}{% endfor %}</div>{% endif %}
 {% if form.area.value or form.city.value %}<p class="selected-area">Selected area: {{ form.area.value }} {{ form.city.value }}</p>{% endif %}
-<div class="filter-location"><h3>Location</h3><p>Click the map to select a point. Nearby search combines with your other filters.</p>
+<div class="filter-location"><h3>Location</h3>
+{% if setup_location %}<p role="status">Your saved location needs a map point. Choose a suggestion or map point, then Save location once for future visits. Other saved preferences stay unchanged.</p>{% if setup_error %}<p role="alert">{{ setup_error }}</p>{% endif %}<button type="submit" form="room-search" formmethod="post" name="csrfmiddlewaretoken" value="{{ csrf_token }}">Save location</button>{% endif %}
+{% if location_lookup_message %}<p role="status">{{ location_lookup_message }}</p>{% endif %}
+{% if location_choices %}<ul class="location-choice-list" aria-label="Matching locations">{% for choice in location_choices %}<li><a href="?{{ choice.query }}">{{ choice.label }}</a></li>{% endfor %}</ul>{% endif %}<p>Click the map to select a point. The selected radius limits recommendations only.</p>
 <div id="room-location-map" aria-label="Location selection map" tabindex="0"></div>
+<p class="location-provider">Location lookup: <a href="https://photon.komoot.io/" target="_blank" rel="noopener">Photon</a>. Search text is sent to this provider to find matching places.</p>
 <p id="map-status" role="status">Loading map. If it is unavailable, use the location search above.</p>
-<noscript><p>The map needs JavaScript. Text search and other filters still work.</p></noscript>
+<noscript><p>The map and autocomplete need JavaScript. Existing location-choice links and selected-point filters still work.</p></noscript>
 <button type="button" id="use-current-location">Use current location</button>
 <button type="button" id="clear-map-point">Clear selected point</button>
 <label for="id_radius">Nearby radius</label>{{ form.radius }}
-<p id="selected-point" role="status">{% if form.latitude.value != None and form.longitude.value != None %}Selected point: {{ form.latitude.value }}, {{ form.longitude.value }}. Radius: {{ form.radius.value|default:'2' }} km.{% else %}No point selected. Radius: {{ form.radius.value|default:'2' }} km (used when a point is selected).{% endif %}</p>
+<p id="selected-point" role="status">{% if form.latitude.value != None and form.longitude.value != None %}Area: {{ form.resolved_label.value|default:form.point_location.value|default:'Selected map point' }}. Active radius: {{ form.radius.value|default:'2' }} km. Coordinates: {{ form.latitude.value }}, {{ form.longitude.value }}.{% else %}No resolved point. Nearby radius is not active. Search an area or select a point on the map.{% endif %}</p>
 </div>
 {% for field in form.visible_fields %}{% if field.name != 'q' and field.name != 'radius' %}<fieldset class="filter-field"><legend>{{ field.label }}</legend>{{ field }}</fieldset>{% endif %}{% endfor %}
 <button class="apply-filters" type="submit" form="room-search">Apply</button>
 </aside>
-<section class="room-results" aria-labelledby="results-heading">
-<div class="results-heading"><div><h2 id="results-heading">Available Rooms</h2><p>Published rooms, newest first.</p></div><p role="status">{{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }} found</p></div>
-<div class="results-list">{% for listing in page_obj %}{% include 'accounts/_room_card.html' with listing=listing %}{% empty %}<div class="empty-state"><h3>{% if form.errors %}Check your search filters{% else %}No available rooms match{% endif %}</h3><p>{% if form.errors %}Correct the highlighted filter values and apply again.{% else %}Try another location or reset the filters. Only approved, available rooms appear here.{% endif %}</p></div>{% endfor %}</div>
-{% if page_obj.paginator.num_pages > 1 %}<nav class="room-pagination" aria-label="Results pages">
+<div class="room-results">
+{% if show_recommendations %}<section class="recommended-results" aria-labelledby="recommended-heading">
+<div class="results-heading"><div><h2 id="recommended-heading">Recommended Rooms</h2><p>Ranked for your search. Some preferences may differ.</p></div><p>{{ recommended_rooms|length }} recommendation{{ recommended_rooms|length|pluralize }}</p></div>
+{% include 'accounts/_room_row_controls.html' with row_id='recommended-room-row' row_label='recommended rooms' %}
+<div class="results-list" id="recommended-room-row" data-room-row tabindex="0" role="region" aria-label="Recommended rooms, horizontal scroll">{% for listing in recommended_rooms %}{% include 'accounts/_room_card.html' with listing=listing show_match=True %}{% empty %}<div class="empty-state"><h3>No available rooms to recommend</h3><p>No eligible rooms are available within the selected map boundary, if any.</p></div>{% endfor %}</div>
+</section>{% endif %}
+<section aria-labelledby="results-heading">
+<div class="results-heading"><div><h2 id="results-heading">All Available Rooms</h2><p>Browse all available rooms across all locations.</p></div><p role="status">{{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }} found</p></div>
+{% include 'accounts/_room_row_controls.html' with row_id='available-room-row' row_label='all available rooms' %}
+<div class="results-list" id="available-room-row" data-room-row tabindex="0" role="region" aria-label="All available rooms, horizontal scroll">{% for listing in page_obj %}{% include 'accounts/_room_card.html' with listing=listing show_match=False %}{% empty %}<div class="empty-state"><h3>No available rooms yet</h3><p>Approved, available rooms will appear here when owners publish them.</p></div>{% endfor %}</div>
+{% if page_obj.paginator.num_pages > 1 %}<nav class="room-pagination" aria-label="All available rooms pages">
 {% if page_obj.has_previous %}<a href="?{{ pagination_query }}&amp;page=1" aria-label="First page">&laquo;</a><a href="?{{ pagination_query }}&amp;page={{ page_obj.previous_page_number }}" aria-label="Previous page">&lsaquo;</a>{% endif %}
 {% for number in page_numbers %}{% if number == page_obj.paginator.ELLIPSIS %}<span>{{ number }}</span>{% elif number == page_obj.number %}<span aria-current="page">{{ number }}</span>{% else %}<a href="?{{ pagination_query }}&amp;page={{ number }}">{{ number }}</a>{% endif %}{% endfor %}
 {% if page_obj.has_next %}<a href="?{{ pagination_query }}&amp;page={{ page_obj.next_page_number }}" aria-label="Next page">&rsaquo;</a><a href="?{{ pagination_query }}&amp;page={{ page_obj.paginator.num_pages }}" aria-label="Last page">&raquo;</a>{% endif %}
 </nav>{% endif %}
 </section>
+</div>
 </div></div>
 {% endblock %}

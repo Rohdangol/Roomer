@@ -65,7 +65,11 @@ Confirmed archive/suspension rules and technical enforcement:
 
 Tenant creates/edits one own preference record, saving required location, maximum budget, room type and furnishing plus optional amenities together. No selected amenities means no amenity preference, not an incomplete record. Missing preference record means not configured. Validate coordinates and positive budget; fixed choices/catalog are in DATA_MODEL.md. This decision supersedes the source's compulsory-amenities statement.
 
-Matching is dynamically ranked with `0.30L + 0.30B + 0.15A + 0.15R + 0.10F`. It is not a rent estimator. No stored Recommendation entity. Score normalization, factor calculations and optional-amenity scoring remain unresolved; do not invent a zero penalty or weight redistribution. Preference storage can proceed independently of calculation.
+Matching is dynamically ranked with `0.30L + 0.30B + 0.15A + 0.15R + 0.10F`. It is not a rent estimator. No stored Recommendation entity. The user-approved formulas, optional-factor policy and eligibility are specified in RECOMMENDATIONS.md; these supersede the earlier deferred scoring decisions.
+
+Recommendation integration and the approved R = Room Type decision
+are tracked in [RECOMMENDATIONS.md](RECOMMENDATIONS.md). Home no longer presents newest-first listings as
+personalized recommendations; Fresh on Roomer remains available independently.
 
 ## Rent estimation (deferred)
 
@@ -291,3 +295,32 @@ Accounts.0005 is applied in the current local database; Shru owns coordination. 
 [TENANT_VERIFICATION_HANDOFF.md](TENANT_VERIFICATION_HANDOFF.md) for implemented
 schema/service signatures, console/SMTP setup and manual review steps. Old
 owner-only overwritten history cannot be reconstructed and remains unchanged.
+
+
+## Agreement workflow v2 handoff
+
+The latest authorized consent/Admin-approval flow is specified in
+[RENTAL_WORKFLOWS.md](RENTAL_WORKFLOWS.md). Acceptance now reserves and auto-creates
+a draft; consent is version-bound; Tenant change requests/Admin returns are
+recorded; Admin approval replaces Owner finalization; the scheduler also completes
+expired inclusive-date rentals. Do not reuse the superseded finalize flow.
+See the legacy-data boundary and required staff approval permission there.
+
+
+## Saved-room readability versus new-request availability
+
+`tenant_readable_listings(actor)` serves current approved Available/Reserved/
+Occupied details and photos to active tenants, with active verified owners,
+no archive and an approved published revision. Home/Find Rooms still use the
+Available-only discovery service. Reserved/Occupied is an availability state,
+not a moderation block; request-create and submit services remain authoritative.
+
+Saved Rooms renders accurate state badges. Inactive/unpublished or restricted
+current content is hidden. If the same tenant has a sent agreement, it may show
+only that authorized historical snapshot and participant-protected agreement
+photo/link, labelled historical; no current hidden revision or other tenant's
+agreement is used. Removal is always scoped to the logged-in tenant.
+
+SavedRoom.listing currently uses CASCADE: hard-deleted listings remove bookmarks.
+A persistent deleted-room placeholder would need an explicitly agreed tombstone/
+snapshot or nullable relationship migration; no such schema change is made here.

@@ -1,0 +1,16 @@
+{% load static %}
+{# display_terms is the latest sent version allowed by the existing Tenant visibility service. #}
+{% with terms=agreement.display_terms %}
+<article class="tenant-request-card tenant-agreement-card">
+    {% include 'accounts/_agreement_photo.html' %}
+    <div class="tenant-request-content">
+        <div class="tenant-request-heading"><h2>{{ terms.listing_snapshot.title }}</h2><span class="tenant-request-status">{{ agreement.get_status_display }}</span></div>
+        <p class="tenant-request-location"><img src="{% static 'accounts/images/location.png' %}" width="16" height="16" alt="">{{ terms.listing_snapshot.locality }}{% if terms.listing_snapshot.locality %}, {% endif %}{{ terms.listing_snapshot.city }}</p>
+        <p class="tenant-request-price">Rs {{ terms.monthly_rent|floatformat:'-2' }}/month</p>
+        <div class="tenant-request-bottom">
+            <div class="tenant-agreement-dates">{% if agreement.status == 'active' or agreement.status == 'completed' or agreement.status == 'scheduled' %}<p>Duration:</p><strong>{{ terms.start_date|date:'M j, Y' }} &ndash; {{ terms.end_date|date:'M j, Y'|default:'Not specified' }}</strong>{% else %}<p>Created</p><strong><time datetime="{{ agreement.created_at|date:'c' }}">{{ agreement.created_at|date:'M j, Y' }}</time></strong>{% endif %}</div>
+            <a href="{% url 'accounts:agreement_details' agreement.pk %}">View Agreement</a>
+        </div>
+    </div>
+</article>
+{% endwith %}

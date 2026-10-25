@@ -1,0 +1,12 @@
+{% load static %}
+{% with revision=application.listing_revision %}
+<article class="tenant-request-card">
+    <div class="tenant-request-photo">{% with photo=revision.photos.all|first %}{% if photo %}<img src="{% url 'accounts:rental_photo' 'request' application.pk photo.pk %}" alt="{{ revision.title }}" loading="lazy">{% else %}<span>Room photo unavailable</span>{% endif %}{% endwith %}</div>
+    <div class="tenant-request-content">
+        <div class="tenant-request-heading"><h2>{{ revision.title }}</h2><span class="tenant-request-status">{{ application.get_status_display }}</span></div>
+        <p class="tenant-request-location"><img src="{% static 'accounts/images/location.png' %}" width="16" height="16" alt="">{{ revision.location_display }}</p>
+        <p class="tenant-request-price">Rs {{ revision.monthly_rent|floatformat:'-2' }}/month</p>
+        <div class="tenant-request-bottom"><p>Requested on<time datetime="{{ application.requested_at|date:'c' }}">{{ application.requested_at|date:'M j, Y' }}</time></p><a href="{% url 'accounts:request_details' application.pk %}">View Request</a></div>
+    </div>
+</article>
+{% endwith %}

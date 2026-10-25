@@ -1,4 +1,5 @@
+{% load static %}
 <div class="request-tenant-summary">
-    <div class="request-tenant-content"><div class="request-avatar-placeholder">Photo unavailable</div><div><h3>{{ party_label }} name unavailable</h3><p>Role unavailable</p><p class="request-muted">Identity verification unavailable</p></div></div>
+    <div class="request-tenant-content"><div class="request-avatar-placeholder"><img class="profile-image-fallback" src="{% static 'accounts/images/profile.png' %}" width="80" height="80" alt="Default profile icon"></div><div><h3>{{ party_label }} name unavailable</h3><p>Role unavailable</p><p class="request-muted">Identity verification unavailable</p></div></div>
     <button type="button" disabled title="Authorized profile viewing is not available yet">View Profile</button>
 </div>

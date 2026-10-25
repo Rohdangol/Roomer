@@ -1,0 +1,24 @@
+{% load static %}
+{% with revision=application.listing_revision %}
+<article class="owner-recent-request">
+    <div class="owner-recent-request-content">
+        <div class="owner-recent-request-heading">
+            {% if application.tenant.profile_picture %}<img class="owner-recent-request-avatar owner-recent-request-avatar-upload" src="{% url 'accounts:owner_request_tenant_photo' application.pk %}" width="72" height="72" alt="">{% else %}<img class="owner-recent-request-avatar" src="{% static 'accounts/images/profile.png' %}" width="72" height="72" alt="">{% endif %}
+            <h3>{{ application.tenant.full_name|default:'Name not provided' }}</h3>
+            <span class="owner-recent-request-status">{{ application.get_status_display }}</span>
+        </div>
+        <div class="owner-recent-request-room">
+            <p>Requested for:</p>
+            <h4>{{ revision.title }}</h4>
+            <p class="owner-recent-request-location"><img src="{% static 'accounts/images/location.png' %}" width="16" height="16" alt="">{{ revision.location_display }}</p>
+        </div>
+        <div class="owner-recent-request-footer">
+            <div>Requested on:<time datetime="{{ application.requested_at|date:'c' }}">{{ application.requested_at|date:'M j, Y' }}</time></div>
+            <a href="{% url 'accounts:owner_request_details' application.pk %}">View Request</a>
+        </div>
+    </div>
+    <div class="owner-recent-request-photo">
+        {% with photo=revision.photos.all|first %}{% if photo %}<img src="{% url 'accounts:rental_photo' 'request' application.pk photo.pk %}" alt="{{ revision.title }}" loading="lazy">{% else %}<span>Room photo unavailable</span>{% endif %}{% endwith %}
+    </div>
+</article>
+{% endwith %}

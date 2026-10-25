@@ -1,14 +1,21 @@
 {% extends 'accounts/base_role.html' %}
 {% load static %}
 {% block title %}My Requests | Roomer{% endblock %}
-{% block body_class %}roomer-public tenant-home-page tenant-requests-page{% endblock %}
-{% block styles %}<link rel="stylesheet" href="{% static 'accounts/tenant_home.css' %}"><link rel="stylesheet" href="{% static 'accounts/tenant_requests.css' %}"><link rel="stylesheet" href="{% static 'accounts/rental_workflows.css' %}">{% endblock %}
+{% block body_class %}roomer-public tenant-home-page tenant-requests-page tenant-request-list-page{% endblock %}
+{% block styles %}{% endblock %}
+{% block css_scope %}roomer-core css-rental-workflows-5 css-tenant-home css-tenant-requests{% endblock %}
 {% block content %}
 <section class="requests-content" aria-labelledby="requests-title">
 <h1 id="requests-title">My Requests</h1><p class="requests-intro">Track the rooms you have requested and their current status.</p>
-{% include 'accounts/_rental_filters.html' %}
-{% for application in page_obj %}{% include 'accounts/_rental_request_card.html' %}
+{# Tenant-specific presentation leaves Owner/Admin list components unchanged. #}
+<nav class="request-tabs" aria-label="Filter requests by status">{% for filter in status_filters %}<a href="{{ list_url }}?status={{ filter.value }}"{% if status == filter.value %} aria-current="page"{% endif %}>{{ filter.label }}</a>{% endfor %}</nav>
+<p class="tenant-request-count">{{ page_obj.paginator.count }} Request{{ page_obj.paginator.count|pluralize }}</p>
+{% for application in page_obj %}{% include 'accounts/_tenant_request_card.html' %}
 {% empty %}<div class="request-empty owner-empty"><h2>No {% if status != 'all' %}{{ status }} {% endif %}requests</h2><p>{% if status == 'all' %}Rental requests will appear here when submitted.{% else %}No requests match this status.{% endif %}</p></div>{% endfor %}
-{% include 'accounts/_rental_pagination.html' %}
+{% if page_obj.has_other_pages %}<nav class="tenant-request-pagination" aria-label="Request pages">
+{% if page_obj.has_previous %}<a href="?status={{ status }}&amp;page=1" aria-label="First page">&laquo;</a><a href="?status={{ status }}&amp;page={{ page_obj.previous_page_number }}" aria-label="Previous page">&lsaquo;</a>{% endif %}
+{% for number in page_obj.paginator.page_range %}{% if number == page_obj.number %}<span aria-current="page">{{ number }}</span>{% else %}<a href="?status={{ status }}&amp;page={{ number }}">{{ number }}</a>{% endif %}{% endfor %}
+{% if page_obj.has_next %}<a href="?status={{ status }}&amp;page={{ page_obj.next_page_number }}" aria-label="Next page">&rsaquo;</a><a href="?status={{ status }}&amp;page={{ page_obj.paginator.num_pages }}" aria-label="Last page">&raquo;</a>{% endif %}
+</nav>{% endif %}
 </section>
 {% endblock %}

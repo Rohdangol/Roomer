@@ -1,0 +1,13 @@
+{% load static %}
+{% with revision=application.listing_revision %}
+<article class="owner-request-card">
+    <div class="owner-request-photo">{% with photo=revision.photos.all|first %}{% if photo %}<img src="{% url 'accounts:rental_photo' 'request' application.pk photo.pk %}" alt="{{ revision.title }}" loading="lazy">{% else %}<span>Room photo unavailable</span>{% endif %}{% endwith %}</div>
+    <div class="owner-request-content">
+        <div class="owner-request-heading"><h2>{{ application.tenant.full_name|default:'Name not provided' }}</h2><span class="owner-request-status">{{ application.get_status_display }}</span></div>
+        {% if application.tenant_identity_verified %}<span class="owner-request-verified">{% include 'core/_verified_icon.html' %}Verified</span>{% endif %}
+        <div class="owner-request-room"><p>Requested for:</p><h3>{{ revision.title }}</h3><p class="owner-request-location"><img src="{% static 'accounts/images/location.png' %}" width="16" height="16" alt="">{{ revision.location_display }}</p></div>
+        <dl class="owner-request-dates"><div><dt>Requested on</dt><dd><time datetime="{{ application.requested_at|date:'c' }}">{{ application.requested_at|date:'M j, Y' }}</time></dd></div><div><dt>Preferred Move-in</dt><dd><time datetime="{{ application.preferred_move_in|date:'Y-m-d' }}">{{ application.preferred_move_in|date:'M j, Y' }}</time></dd></div></dl>
+        <a class="owner-request-view" href="{% url 'accounts:owner_request_details' application.pk %}">View Request</a>
+    </div>
+</article>
+{% endwith %}

@@ -27,8 +27,12 @@ class AgreementTermsForm(forms.Form):
     start_date = forms.DateField(label="Start Date", widget=forms.DateInput(attrs={"type": "date"}))
     end_date = forms.DateField(label="End Date (exclusive)", widget=forms.DateInput(attrs={"type": "date"}))
     additional_terms = forms.CharField(label="Additional Terms & Conditions", widget=forms.Textarea(attrs={"rows": 6}))
-    confirm = forms.BooleanField(label="I confirm these agreement terms.")
 
 
 class AgreementActionForm(ConfirmActionForm):
     terms_id = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
+
+
+class AgreementReasonForm(forms.Form):
+    terms_id = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
+    reason = forms.CharField(label="Explanation", max_length=4000, strip=True, widget=forms.Textarea(attrs={"rows": 4}))

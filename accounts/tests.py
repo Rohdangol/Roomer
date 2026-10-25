@@ -194,7 +194,7 @@ class RegistrationViewTests(TestCase):
         self.assertTemplateUsed(response, "accounts/register.html")
         self.assertFalse(response.context["form"].is_bound)
         self.assertContains(response, "csrfmiddlewaretoken")
-        self.assertContains(response, "/static/accounts/register.css")
+        self.assertContains(response, "/static/core/roomer.css")
         self.assertContains(response, reverse("accounts:login"))
         self.assertEqual(User.objects.count(), 0)
 

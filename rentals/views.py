@@ -5,14 +5,14 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import IntegrityError
-from django.db.models import Count
+from django.db.models import Count, Exists, OuterRef
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from accounts.permissions import owner_needs_verification
-from listings.services import published_listings, require_owner
+from listings.services import published_listings, require_owner, tenant_readable_listings
 from listings.models import RoomImage
 from .forms import ConfirmActionForm, RentalRequestForm
 from .models import RentalRequest
@@ -52,6 +52,11 @@ def request_list(request, owner=False):
     if response:
         return response
     records = scoped_requests(request.user, owner)
+    if owner:
+        from accounts.models import TenantIdentityAttempt
+        # Identity approval is distinct from email verification; return only the badge flag.
+        records = records.annotate(tenant_identity_verified=Exists(TenantIdentityAttempt.objects.filter(
+            user_id=OuterRef("tenant_id"), status="approved")))
     context = paginated_statuses(request, records, RentalRequest.Status.choices[:3])
     # All includes cancelled records even though the wireframe has no separate Cancelled tab.
     context["status_filters"][0]["count"] = records.count()
@@ -76,7 +81,9 @@ def request_create(request, pk):
         else:
             messages.success(request, "Your rental request has been sent.")
             return redirect("accounts:request_details", pk=application.pk)
-    return render(request, "accounts/request_create.html", {"form": form, "listing": listing, "revision": listing.published_revision})
+    # The modal and standalone fallback share the exact same validation/service path.
+    template = "accounts/_request_form.html" if request.headers.get("X-Requested-With") == "XMLHttpRequest" else "accounts/request_create.html"
+    return render(request, template, {"form": form, "listing": listing, "revision": listing.published_revision})
 
 
 @login_required(login_url="accounts:login")
@@ -86,8 +93,18 @@ def request_detail(request, pk, owner=False):
     if response:
         return response
     application = get_object_or_404(scoped_requests(request.user, owner), pk=pk)
-    return render(request, "accounts/owner_request_details.html" if owner else "accounts/request_details.html",
-        {"application": application, "revision": application.listing_revision, "owner_view": owner})
+    context = {"application": application, "revision": application.listing_revision, "owner_view": owner}
+    if owner:
+        from accounts.models import TenantIdentityAttempt
+        context["tenant_verified"] = TenantIdentityAttempt.objects.filter(
+            user_id=application.tenant_id, status="approved").exists()
+    else:
+        from accounts.models import OwnerVerification
+        # Historical request terms remain visible, but View Room requires current eligibility.
+        context["can_view_room"] = tenant_readable_listings(request.user).filter(pk=application.listing_id).exists()
+        context["owner_verified"] = OwnerVerification.objects.filter(
+            user_id=application.listing.owner_id, status=OwnerVerification.Status.APPROVED).exists()
+    return render(request, "accounts/owner_request_details.html" if owner else "accounts/request_details.html", context)
 
 
 @login_required(login_url="accounts:login")
@@ -102,11 +119,13 @@ def request_action(request, pk, action, owner=False):
         messages.error(request, "Confirm the action before submitting.")
     else:
         try:
-            decide_request(request.user, application.pk, action)
+            updated = decide_request(request.user, application.pk, action)
         except ValidationError as error:
             messages.error(request, " ".join(error.messages))
         else:
             messages.success(request, "Rental request updated.")
+            if owner and action == "accept":
+                return redirect("accounts:owner_agreement_details", pk=updated.agreement.pk)
     return redirect("accounts:owner_request_details" if owner else "accounts:request_details", pk=pk)
 
 

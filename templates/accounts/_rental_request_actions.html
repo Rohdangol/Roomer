@@ -1,11 +1,22 @@
 {% if application.status == 'pending' %}
 <div class="request-decision-actions rental-actions">
 {% if owner_view %}
-<form method="post" action="{% url 'accounts:owner_request_reject' application.pk %}">{% csrf_token %}<label><input type="checkbox" name="confirm" required> Confirm rejection</label><button type="submit">Reject Request</button></form>
-<form method="post" action="{% url 'accounts:owner_request_accept' application.pk %}">{% csrf_token %}<label><input type="checkbox" name="confirm" required> Confirm acceptance</label><button type="submit">Accept Request</button></form>
+<form method="post" data-owner-decision="reject" action="{% url 'accounts:owner_request_reject' application.pk %}">{% csrf_token %}<input type="hidden" name="confirm" value="1"><button type="submit">Reject Request</button></form>
+<form method="post" data-owner-decision="accept" action="{% url 'accounts:owner_request_accept' application.pk %}">{% csrf_token %}<input type="hidden" name="confirm" value="1"><button type="submit">Accept Request</button></form>
+<dialog class="request-cancel-dialog owner-decision-dialog" aria-labelledby="owner-decision-title" aria-describedby="owner-decision-description">
+    <h2 id="owner-decision-title">Confirm request decision</h2>
+    <p id="owner-decision-description"></p>
+    <div class="request-cancel-options"><button type="button" data-decision-dismiss autofocus>No</button><button type="button" data-decision-confirm>Yes, Confirm</button></div>
+</dialog>
 {% else %}
-<form method="post" action="{% url 'accounts:request_cancel' application.pk %}">{% csrf_token %}<label><input type="checkbox" name="confirm" required> Confirm cancellation</label><button type="submit">Cancel Request</button></form>
+{# Keep Django's confirmation field and CSRF validation; JavaScript adds the dialog. #}
+<form id="request-cancel-form" method="post" action="{% url 'accounts:request_cancel' application.pk %}">{% csrf_token %}<input type="hidden" name="confirm" value="1"><button type="submit" id="request-cancel-trigger">Cancel Request</button></form>
+<dialog class="request-cancel-dialog" aria-labelledby="cancel-request-title" aria-describedby="cancel-request-description">
+    <h2 id="cancel-request-title">Cancel this request?</h2>
+    <p id="cancel-request-description">Your pending rental request will be cancelled.</p>
+    <div class="request-cancel-options"><button type="button" data-keep-request autofocus>Keep Request</button><button type="button" data-confirm-cancel>Yes, Cancel Request</button></div>
+</dialog>
 {% endif %}
 </div>
 {% endif %}
-{% if application.status == 'accepted' and owner_view %}<p><a href="{% url 'accounts:owner_agreement_prepare' application.pk %}">Prepare / View Agreement</a></p>{% endif %}
+{% if application.status == 'accepted' and owner_view %}<p><a class="owner-prepare-agreement-button" href="{% url 'accounts:owner_agreement_prepare' application.pk %}">Prepare / View Agreement</a></p>{% endif %}

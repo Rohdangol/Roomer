@@ -2,8 +2,9 @@
 {% load static %}
 {% block title %}Create an Account | Roomer{% endblock %}
 {% block styles %}
-    <link rel="stylesheet" href="{% static 'accounts/register.css' %}">
+
 {% endblock %}
+{% block css_scope %}roomer-core css-password-controls css-register{% endblock %}
 {% block scripts %}
     <script src="{% static 'accounts/password-controls.js' %}" defer></script>
 {% endblock %}

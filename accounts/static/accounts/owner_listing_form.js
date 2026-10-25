@@ -69,8 +69,13 @@
     let locationVersion = 0;
     const cityInput = document.getElementById("id_city");
     const addressInput = document.getElementById("id_address");
+    const localityInput = document.getElementById("id_locality");
+    let reverseController;
+    let reverseTimer;
     function invalidateLocationRequests() {
         locationVersion += 1;
+        clearTimeout(reverseTimer);
+        reverseController?.abort();
         results.replaceChildren();
         searchStatus.textContent = "";
         currentStatus.textContent = "";
@@ -81,6 +86,7 @@
     }
     cityInput.addEventListener("input", invalidateLocationRequests);
     addressInput.addEventListener("input", invalidateLocationRequests);
+    localityInput.addEventListener("input", invalidateLocationRequests);
     let selectedLabel = "Saved location";
     function point() {
         const lat = Number(latitude.value), lon = Number(longitude.value);
@@ -98,12 +104,49 @@
         map.panTo(selected);
         status.textContent = `${selectedLabel}: ${selected[0].toFixed(6)}, ${selected[1].toFixed(6)}. Drag the pin or click the map to adjust.`;
     }
-    function choose(selected, label = "Manually adjusted pin") {
+    function choose(selected, label = "Manually adjusted pin", lookupAddress = true) {
         invalidateLocationRequests();
         selectedLabel = label;
         latitude.value = selected.lat.toFixed(6);
         longitude.value = selected.lng.toFixed(6);
         updateMarker();
+        if (lookupAddress) {
+            const version = locationVersion;
+            searchStatus.textContent = "Looking up the selected address...";
+            // Debounce pin movements; only the latest selection may update editable fields.
+            reverseTimer = setTimeout(() => reverseSelectedPoint(version), 400);
+        }
+    }
+    async function reverseSelectedPoint(version) {
+        const body = new FormData();
+        body.set("mode", "reverse");
+        body.set("latitude", latitude.value);
+        body.set("longitude", longitude.value);
+        const controller = new AbortController();
+        reverseController = controller;
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        try {
+            const response = await fetch(search.dataset.url, {
+                method: "POST", body, credentials: "same-origin", signal: controller.signal,
+                headers: {"X-CSRFToken": document.querySelector('[name="csrfmiddlewaretoken"]').value}
+            });
+            const data = await response.json();
+            if (!isCurrent(version)) return;
+            if (!response.ok) throw new Error(data.error || "Address lookup failed.");
+            const result = data.results?.[0];
+            if (!result?.address) throw new Error("No address was found for this point.");
+            // Missing provider fields retain the owner's input rather than inventing values.
+            addressInput.value = result.address;
+            if (result.city) cityInput.value = result.city;
+            if (result.locality) localityInput.value = result.locality;
+            searchStatus.textContent = result.city && result.locality
+                ? "Nearby address filled. Please check and correct it if needed."
+                : "Partial address found. Please check and complete City, Locality and Address manually; the selected pin is retained.";
+        } catch (error) {
+            if (isCurrent(version)) searchStatus.textContent = "Could not complete address lookup. The selected pin and entered address are retained. Enter or correct City, Locality and Address manually, or select the pin again to retry.";
+        } finally {
+            clearTimeout(timeout);
+        }
     }
     latitude.addEventListener("change", updateMarker);
     longitude.addEventListener("change", updateMarker);
@@ -122,33 +165,8 @@
             if (!isCurrent(gpsVersion)) { currentLocation.disabled = false; return; }
             choose({lat: position.coords.latitude, lng: position.coords.longitude}, "Current location");
             map.setView([position.coords.latitude, position.coords.longitude], 16);
-            const reverseVersion = locationVersion;
-            currentStatus.textContent = "Location selected. Looking up the address...";
-            const body = new FormData();
-            body.set("mode", "reverse");
-            body.set("latitude", position.coords.latitude);
-            body.set("longitude", position.coords.longitude);
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 10000);
-            try {
-                const response = await fetch(search.dataset.url, {
-                    method: "POST", body, credentials: "same-origin", signal: controller.signal,
-                    headers: {"X-CSRFToken": document.querySelector('[name="csrfmiddlewaretoken"]').value}
-                });
-                const data = await response.json();
-                if (!isCurrent(reverseVersion)) return;
-                const result = data.results?.[0];
-                if (!response.ok || !result?.address) throw new Error("Address unavailable");
-                if (result.city) cityInput.value = result.city;
-                addressInput.value = result.address;
-                if (result.locality) document.getElementById("id_locality").value = result.locality;
-                currentStatus.textContent = "Location and nearby address selected. Please confirm or add address details and adjust the pin if needed.";
-            } catch (error) {
-                if (isCurrent(reverseVersion)) currentStatus.textContent = "Location selected. Please enter or confirm the address.";
-            } finally {
-                clearTimeout(timeout);
-                currentLocation.disabled = false;
-            }
+            currentStatus.textContent = "Current location selected.";
+            currentLocation.disabled = false;
         }, error => {
             currentLocation.disabled = false;
             if (!isCurrent(gpsVersion)) return;
@@ -196,8 +214,9 @@
                         searchStatus.textContent = "The map is unavailable. Reload to select a pin; your entered details are retained.";
                         return;
                     }
-                    if (result.locality) document.getElementById("id_locality").value = result.locality;
-                    choose({lat: result.latitude, lng: result.longitude}, result.label);
+                    // Suggest a neighbourhood only when the owner has not entered one.
+                if (result.locality && !document.getElementById("id_locality").value.trim()) document.getElementById("id_locality").value = result.locality;
+                    choose({lat: result.latitude, lng: result.longitude}, result.label, false);
                     map.setView([result.latitude, result.longitude], 16);
                     searchStatus.textContent = "Location selected. Adjust the pin for accuracy.";
                     container.focus();

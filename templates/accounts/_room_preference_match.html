@@ -1,0 +1,12 @@
+{% if preference_match.result %}
+<section class="detail-preference-match detail-preference-match-compact" aria-labelledby="preference-match-title">
+    <h2 id="preference-match-title">{{ preference_match.result.percentage }}% Preference match</h2>
+    <button class="match-info-button" type="button" aria-label="About this preference match" aria-expanded="false" aria-controls="preference-match-popover" aria-describedby="preference-match-popover"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></svg></button>
+    <div class="match-popover" id="preference-match-popover" role="tooltip" hidden>
+    <p class="match-source">{{ preference_match.source }}</p>
+    <dl class="match-breakdown">{% for factor in preference_match.result.breakdown %}<div><dt>{{ factor.label }}</dt><dd>{{ factor.detail }} <small>({{ factor.percentage }}%)</small></dd></div>{% endfor %}</dl>
+    <p class="match-note">This is a preference match, not an availability guarantee.</p>
+    </div>
+</section>
+
+{% endif %}
